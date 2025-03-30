@@ -1,0 +1,127 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Home,
+  Search,
+  PlusSquare,
+  Bell,
+  User,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/language-provider';
+import CreatePostDialog from '@/components/create-post-dialog';
+
+interface SidebarProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+export default function Sidebar({ open, setOpen }: SidebarProps) {
+  const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { icon: Home, label: t('home'), href: '/' },
+    { icon: Search, label: t('search'), href: '/search' },
+    {
+      icon: PlusSquare,
+      label: t('create'),
+      href: '#',
+      isCreate: true,
+    },
+    { icon: Bell, label: t('notifications'), href: '/notifications' },
+    { icon: User, label: t('profile'), href: '/profile' },
+  ];
+
+  return (
+    <aside
+      className={`fixed left-0 top-0 z-40 h-screen bg-background border-r transition-all duration-300 flex flex-col ${
+        open ? 'w-64' : 'w-16'
+      }`}
+    >
+      <div className="flex items-center justify-between p-4">
+        {open && <h1 className="text-xl font-bold">Threads</h1>}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpen(!open)}
+          className="ml-auto"
+        >
+          {open ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        </Button>
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center p-4">
+        <nav className="space-y-6">
+          {navItems.map((item) =>
+            item.isCreate ? (
+              <CreatePostDialog
+                key="create"
+                trigger={
+                  <button
+                    className={`flex items-center ${
+                      open ? 'justify-start px-3' : 'justify-center'
+                    } py-2 rounded-md transition-colors hover:bg-accent hover:text-accent-foreground w-full`}
+                  >
+                    <PlusSquare size={20} />
+                    {open && item.label && (
+                      <span className="ml-3">{item.label}</span>
+                    )}
+                  </button>
+                }
+              />
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center ${
+                  open ? 'justify-start px-3' : 'justify-center'
+                } py-2 rounded-md transition-colors ${
+                  pathname === item.href
+                    ? 'bg-accent text-accent-foreground'
+                    : 'hover:bg-accent hover:text-accent-foreground'
+                }`}
+              >
+                <item.icon size={20} />
+                {open && item.label && (
+                  <span className="ml-3">{item.label}</span>
+                )}
+              </Link>
+            )
+          )}
+        </nav>
+      </div>
+
+      <div className="p-4 space-y-4">
+        <Link
+          href="/settings"
+          className={`flex items-center ${
+            open ? 'justify-start px-3' : 'justify-center'
+          } py-2 rounded-md transition-colors ${
+            pathname === '/settings'
+              ? 'bg-accent text-accent-foreground'
+              : 'hover:bg-accent hover:text-accent-foreground'
+          }`}
+        >
+          <Settings size={20} />
+          {open && <span className="ml-3">{t('settings')}</span>}
+        </Link>
+        <Link href="/auth/login">
+          <Button
+            variant="ghost"
+            className={`w-full ${!open ? 'justify-center' : 'justify-start'}`}
+          >
+            <LogOut size={20} />
+            {open && <span className="ml-3">{t('logout')}</span>}
+          </Button>
+        </Link>
+      </div>
+    </aside>
+  );
+}
