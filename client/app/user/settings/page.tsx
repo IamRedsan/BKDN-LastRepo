@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">{t('changePassword')}</h2>
-            <Button onClick={() => router.push('/auth/change-password')}>
+            <Button onClick={() => router.push('/user/change-password')}>
               {t('changePassword')}
             </Button>
           </div>

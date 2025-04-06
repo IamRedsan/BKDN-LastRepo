@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { EMAIL_CONFIG } from 'src/common/constant/register-name.config';
+import { EMAIL_CONFIG } from 'src/common/constant/register-name-config';
 
 export default registerAs(EMAIL_CONFIG, () => ({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',

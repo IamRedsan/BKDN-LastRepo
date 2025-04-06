@@ -19,7 +19,6 @@ export class AuthMiddleware implements NestMiddleware {
     try {
       const payload = this.jwtService.verify(token);
       const { userId } = payload;
-
       // Lấy thông tin user từ database
       const user = await this.userService.findById(userId);
       if (!user) {

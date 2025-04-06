@@ -1,57 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from 'src/common/enums/user-role.enum';
-import { UserStatus } from 'src/common/enums/user-status.enum';
 
-export class UserResponseDto {
-  @ApiProperty({
-    description: 'Unique identifier of the user',
-    example: '507f1f77bcf86cd799439011',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: 'Email address of the user',
-    example: 'user@example.com',
-  })
-  email: string;
-
-  @ApiProperty({
-    description: 'Username of the user',
-    example: 'username',
-  })
-  username: string;
-
-  @ApiProperty({
-    description: 'Full name of the user',
-    example: 'John Doe',
-  })
-  name: string;
-
+export class LoginResponseDto {
   @ApiProperty({
     description: 'Role of the user',
     enum: UserRole,
     example: UserRole.USER,
   })
-  role: UserRole;
+  role?: UserRole;
 
   @ApiProperty({
-    description: 'Status of the user account',
-    enum: UserStatus,
-    example: UserStatus.ACTIVE,
+    description: 'Account is banned or not',
+    type: Boolean,
+    example: false,
   })
-  status: UserStatus;
-}
-
-export class LoginResponseDto {
-  @ApiProperty({
-    description: 'Success message',
-    example: 'Login successful',
-  })
-  message: string;
+  isBanned?: boolean;
 
   @ApiProperty({
-    description: 'User information',
-    type: UserResponseDto,
+    description: 'Account is verified or not',
+    type: Boolean,
+    example: false,
   })
-  user: UserResponseDto;
+  isEmailVerified?: boolean;
+
+  isSuccess: boolean;
+
+  emailToken?: string;
 }

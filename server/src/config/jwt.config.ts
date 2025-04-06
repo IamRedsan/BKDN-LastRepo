@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { JwtSignOptions } from '@nestjs/jwt';
-import { JWT_CONFIG } from 'src/common/constant/register-name.config';
+import { JWT_CONFIG } from 'src/common/constant/register-name-config';
 
 export default registerAs<JwtSignOptions>(JWT_CONFIG, () => ({
   secret: process.env.JWT_SECRET,

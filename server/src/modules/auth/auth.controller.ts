@@ -65,9 +65,44 @@ export class AuthController {
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     try {
       const result = await this.authService.googleLogin(req.user, res);
-      return res.json(result);
+
+      if (!result) {
+        // Nếu xác thực thất bại, hiển thị thông báo lỗi và đóng cửa sổ
+        return res.send(`
+          <html>
+            <body>
+              <script>
+                window.opener.postMessage({ success: false }, '*');
+                window.close();
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
+      // Nếu xác thực thành công, đóng cửa sổ và gửi thông tin về parent window
+      return res.send(`
+        <html>
+          <body>
+            <script>
+              window.opener.postMessage({ success: true }, '*');
+              window.close();
+            </script>
+          </body>
+        </html>
+      `);
     } catch (error) {
-      throw error;
+      // Xử lý lỗi và đóng cửa sổ
+      return res.send(`
+        <html>
+          <body>
+            <script>
+              alert('An error occurred during authentication.');
+              window.close();
+            </script>
+          </body>
+        </html>
+      `);
     }
   }
 
@@ -85,16 +120,9 @@ export class AuthController {
   }
 
   @Get('verify-email')
-  async verifyEmail(@Query('token') token: string) {
-    return this.authService.verifyEmail(token);
-  }
-
-  @Get('whoami')
-  getProfile(@Req() req: Request) {
-    const user = { ...req.user };
-    delete user._id;
-    delete user.googleId;
-    return user;
+  async verifyEmail(@Query('token') token: string, @Res() res: Response) {
+    this.authService.verifyEmail(token);
+    return res.redirect(process.env.FRONTEND_URL + '/auth/verify-success');
   }
 
   @Get('admin')
@@ -118,6 +146,17 @@ export class AuthController {
     try {
       await this.authService.refreshToken(refreshToken, response);
       return { message: 'Token refreshed successfully' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('resend-email')
+  @HttpCode(HttpStatus.OK)
+  async resendEmail(@Body('emailToken') emailToken: string) {
+    try {
+      await this.authService.resendVerificationEmail(emailToken);
+      return { message: 'Verification email resent successfully' };
     } catch (error) {
       throw error;
     }

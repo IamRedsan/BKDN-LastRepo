@@ -1,23 +1,17 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { COOKIE_CONFIG, JWT_CONFIG } from '../../common/constant/register-name.config';
-import { UserStatus } from 'src/common/enums/user-status.enum';
+import { COOKIE_CONFIG, JWT_CONFIG } from '../../common/constant/register-name-config';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { EmailService } from '../email/email.service';
-import { User } from 'src/common/schemas/user.schema';
 import { LoginRequestDto } from './dto/request/login-request.dto';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
+import { Language, Theme } from 'src/common/enums/user-option.enum';
 
 @Injectable()
 export class AuthService {
@@ -41,38 +35,49 @@ export class AuthService {
     const { username, password } = loginDto;
     const user = await this.validateUser(username, password);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (!user.isEmailVerified) {
-      const verificationData = {
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        password: user.password,
-        userId: user._id,
-        googleId: user.googleId,
+      return {
+        isSuccess: false,
       };
-
-      this.sendVerificationEmail(user, verificationData);
-      throw new UnauthorizedException(
-        'Please verify your email before logging in. A new verification email has been sent.',
-      );
-    }
-
-    if (user.status !== UserStatus.ACTIVE) {
-      throw new UnauthorizedException('Your account is not active. Please contact support.');
     }
 
     const jwtConfig = this.configService.get(JWT_CONFIG);
+    if (!user.isEmailVerified) {
+      const emailToken = this.jwtService.sign(
+        { email: user.email },
+        { expiresIn: jwtConfig.verifyTokenExpiresIn },
+      );
 
+      this.emailService.sendVerificationEmail(emailToken);
+      return {
+        emailToken: this.jwtService.sign(
+          {
+            email: user.email,
+          },
+          {
+            expiresIn: jwtConfig.verifyTokenExpiresIn,
+          },
+        ),
+        role: user.role,
+        isBanned: user.isBanned,
+        isEmailVerified: user.isEmailVerified,
+        isSuccess: false,
+      };
+    }
+
+    if (user.isBanned) {
+      return {
+        role: user.role,
+        isBanned: user.isBanned,
+        isEmailVerified: user.isEmailVerified,
+        isSuccess: true,
+      };
+    }
     const accessToken = this.jwtService.sign(
-      { userId: user._id },
+      { userId: user._id.toString() },
       { expiresIn: jwtConfig.expiresIn },
     );
-
     const refreshToken = this.jwtService.sign(
-      { userId: user._id },
+      { userId: user._id.toString() },
       { expiresIn: jwtConfig.refreshTokenExpiresIn },
     );
 
@@ -84,31 +89,11 @@ export class AuthService {
     });
 
     return {
-      message: 'Login successful',
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        role: user.role,
-        status: user.status,
-      },
+      role: user.role,
+      isBanned: user.isBanned,
+      isEmailVerified: user.isEmailVerified,
+      isSuccess: true,
     };
-  }
-
-  private async sendVerificationEmail(user: User, verificationData: any) {
-    const jwtConfig = this.configService.get(JWT_CONFIG);
-
-    const dataWithToken = {
-      ...verificationData,
-      token: this.jwtService.sign(verificationData, {
-        expiresIn: jwtConfig.verifyTokenExpiresIn,
-      }),
-    };
-
-    this.emailService.sendVerificationEmail(user, dataWithToken).catch(error => {
-      console.error('Error sending verification email:', error);
-    });
   }
 
   async register(registerDto: RegisterRequestDto): Promise<RegisterResponseDto> {
@@ -118,34 +103,18 @@ export class AuthService {
       throw new BadRequestException('Passwords do not match');
     }
 
-    const existingUser = await this.userService.findByEmail(email);
+    let existingUser = await this.userService.findByEmail(email);
     if (existingUser) {
-      if (existingUser.googleId) {
-        const verificationData = {
-          email,
-          username,
-          name,
-          password: await bcrypt.hash(password, 10),
-          googleId: existingUser.googleId,
-          userId: existingUser._id,
-          isGoogleUser: true,
-        };
+      return {
+        isSuccess: false,
+      };
+    }
 
-        this.sendVerificationEmail(existingUser, verificationData);
-
-        return {
-          user: {
-            id: existingUser._id.toString(),
-            email: existingUser.email,
-            username: existingUser.username,
-            name: existingUser.name,
-            role: existingUser.role,
-            status: existingUser.status,
-          },
-        };
-      }
-
-      throw new ConflictException('Email already registered');
+    existingUser = await this.userService.findByUsername(username);
+    if (existingUser) {
+      return {
+        isSuccess: false,
+      };
     }
 
     const newUser = await this.userService.register({
@@ -154,31 +123,26 @@ export class AuthService {
       name,
       havePassword: true,
       password: await bcrypt.hash(password, 10),
-      status: UserStatus.INACTIVE,
       isEmailVerified: false,
       role: UserRole.USER,
+      theme: Theme.SYSTEM,
+      language: Language.EN,
       followers: [],
       following: [],
       followersCount: 0,
       followingCount: 0,
     });
 
-    this.sendVerificationEmail(newUser, {
-      email: newUser.email,
-      username: newUser.username,
-      name: newUser.name,
-      userId: newUser._id,
-    });
+    const emailToken = this.jwtService.sign(
+      { email: newUser.email },
+      { expiresIn: this.configService.get(JWT_CONFIG).verifyTokenExpiresIn },
+    );
+
+    this.emailService.sendVerificationEmail(emailToken);
 
     return {
-      user: {
-        id: newUser._id.toString(),
-        email: newUser.email,
-        username: newUser.username,
-        name: newUser.name,
-        role: newUser.role,
-        status: newUser.status,
-      },
+      emailToken: emailToken,
+      isSuccess: true,
     };
   }
 
@@ -200,9 +164,10 @@ export class AuthService {
         name,
         googleId,
         username: this.generateTemporaryUsername(),
-        status: UserStatus.ACTIVE,
         isEmailVerified: true,
         role: UserRole.USER,
+        havePassword: false,
+        theme: Theme.SYSTEM,
         followers: [],
         following: [],
         followersCount: 0,
@@ -214,7 +179,6 @@ export class AuthService {
 
     if (!user.googleId) {
       user.googleId = googleId;
-      user.status = UserStatus.ACTIVE;
       user.isEmailVerified = true;
       await this.userService.update(user._id.toString(), user);
     }
@@ -224,6 +188,10 @@ export class AuthService {
 
   async googleLogin(user: any, res: Response) {
     const jwtConfig = this.configService.get(JWT_CONFIG);
+
+    if (user.isBanned) {
+      return null; //redirect login
+    }
 
     const accessToken = this.jwtService.sign(
       { userId: user._id },
@@ -243,13 +211,13 @@ export class AuthService {
     });
 
     return {
+      //redirect home page
       user: {
         email: user.email,
         username: user.username,
         name: user.name,
         role: user.role,
-        status: user.status,
-        isEmailVerified: user.isEmailVerified,
+        isBanned: user.isBanned,
         followers: user.followers,
         following: user.following,
         followersCount: user.followersCount,
@@ -265,37 +233,17 @@ export class AuthService {
   async verifyEmail(token: string) {
     try {
       const decoded = this.jwtService.verify(token);
-      const { userId, email, username, name, password, googleId, isGoogleUser } = decoded;
-
-      const user = await this.userService.findById(userId);
+      const { email } = decoded;
+      const user = await this.userService.findByEmail(email);
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
-
-      if (isGoogleUser) {
-        user.email = email;
-        user.username = username;
-        user.name = name;
-        user.password = password;
-        user.isEmailVerified = true;
-        user.status = UserStatus.ACTIVE;
-        user.googleId = googleId;
-      } else {
-        user.isEmailVerified = true;
-        user.status = UserStatus.ACTIVE;
-      }
+      user.isEmailVerified = true;
 
       await this.userService.update(user._id.toString(), user);
 
       return {
         message: 'Email verified successfully',
-        user: {
-          id: user._id.toString(),
-          email: user.email,
-          username: user.username,
-          name: user.name,
-          status: user.status,
-        },
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -340,11 +288,14 @@ export class AuthService {
           username: user.username,
           name: user.name,
           role: user.role,
-          status: user.status,
         },
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async resendVerificationEmail(emailToken: string) {
+    await this.emailService.sendVerificationEmail(emailToken);
   }
 }
