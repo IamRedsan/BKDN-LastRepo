@@ -6,7 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { EmailModule } from './modules/email/email.module';
 import config from './config';
-import { DB_CONFIG, JWT_CONFIG } from './common/constant/register-name.config';
+import { DB_CONFIG, JWT_CONFIG } from './common/constant/register-name-config';
 
 @Module({
   imports: [

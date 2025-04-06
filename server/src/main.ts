@@ -7,7 +7,7 @@ import {
   APP_CONFIG,
   CORS_CONFIG,
   COOKIE_CONFIG,
-} from './common/constant/register-name.config';
+} from './common/constant/register-name-config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

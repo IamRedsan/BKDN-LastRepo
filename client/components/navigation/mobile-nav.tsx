@@ -11,10 +11,10 @@ export default function MobileNav() {
   const { t } = useLanguage();
 
   const navItems = [
-    { icon: Home, label: t('home'), href: '/' },
-    { icon: Search, label: t('search'), href: '/search' },
-    { icon: Bell, label: t('notifications'), href: '/notifications' },
-    { icon: User, label: t('profile'), href: '/profile' },
+    { icon: Home, label: t('home'), href: '/user' },
+    { icon: Search, label: t('search'), href: '/user/search' },
+    { icon: Bell, label: t('notifications'), href: '/user/notifications' },
+    { icon: User, label: t('profile'), href: '/user/profile' },
   ];
 
   return (

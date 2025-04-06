@@ -1,57 +1,124 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { useLanguage } from "@/components/language-provider"
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { useLanguage } from '@/components/language-provider';
+import { useLogin } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { Role } from '@/enums/Role';
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const { t } = useLanguage()
+  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const { mutate: login, isPending } = useLogin();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    if (username === '' || password === '') {
+      toast({
+        title: t('error'),
+        description: t('emptyFields'),
+      });
+      return;
+    }
+    login(
+      { username, password },
+      {
+        onSuccess: (data) => {
+          if (!data.isEmailVerified) {
+            router.push('/auth/verify-email/' + data.emailToken!);
+            return;
+          }
+          if (data.isSuccess === false) {
+            toast({
+              title: t('error'),
+              description: t('loginFailed'),
+            });
+            return;
+          }
+          if (data.isBanned) {
+            toast({
+              title: t('error'),
+              description: t('banned'),
+            });
+            return;
+          }
+          if (data.role === Role.ADMIN) {
+            router.push('/admin');
+          } else {
+            router.push('/user');
+          }
+        },
+        onError: (error) => {
+          console.error('Login failed:', error);
+        },
+      }
+    );
+  };
 
-    // Simulate login
-    setTimeout(() => {
-      setLoading(false)
-      router.push("/")
-    }, 1500)
-  }
+  const handleGoogleLogin = () => {
+    const popup = window.open(
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/google`,
+      'GoogleAuth',
+      'width=500,height=600'
+    );
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== process.env.NEXT_PUBLIC_SERVER_URL) {
+        console.error('Invalid origin:', event.origin);
+        return;
+      }
+
+      if (event.data.success) {
+        toast({
+          title: t('success'),
+          description: t('googleLoginSuccess'),
+        });
+
+        router.push('/user');
+      } else {
+        toast({
+          title: t('error'),
+          description: t('googleLoginFailed'),
+        });
+      }
+    });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Threads</h1>
-          <p className="mt-2 text-muted-foreground">{t("login")}</p>
+          <h1 className="text-3xl font-bold">LOGIN</h1>
+          <p className="mt-2 text-muted-foreground">{t('login')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t("email")}</Label>
+              <Label htmlFor="email">{t('username')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
+                  id="username"
+                  type="text"
+                  placeholder={t('username')}
                   className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  disabled={isPending}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
@@ -59,18 +126,22 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t("password")}</Label>
-                <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">
-                  {t("forgotPassword")}
+                <Label htmlFor="password">{t('password')}</Label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  {t('forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   className="pl-10 pr-10"
                   value={password}
+                  placeholder="********"
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
@@ -91,14 +162,19 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Loading..." : t("login")}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? t('loading') : t('login')}
           </Button>
 
           <Separator className="my-4" />
 
           <div className="space-y-4">
-            <Button variant="outline" className="w-full" type="button">
+            <Button
+              variant="outline"
+              className="w-full"
+              type="button"
+              onClick={handleGoogleLogin}
+            >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -118,54 +194,23 @@ export default function LoginPage() {
                 />
                 <path d="M1 1h22v22H1z" fill="none" />
               </svg>
-              Google
-            </Button>
-
-            <Button variant="outline" className="w-full" type="button">
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M9.5 3H14.5C17.5376 3 20 5.46243 20 8.5V15.5C20 18.5376 17.5376 21 14.5 21H9.5C6.46243 21 4 18.5376 4 15.5V8.5C4 5.46243 6.46243 3 9.5 3Z"
-                  fill="#1877F2"
-                />
-                <path
-                  d="M16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12V17H10V12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12V17H16V12Z"
-                  fill="white"
-                />
-                <circle cx="12" cy="6" r="1" fill="white" />
-              </svg>
-              Facebook
-            </Button>
-
-            <Button variant="outline" className="w-full" type="button">
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z"
-                  fill="black"
-                />
-                <path
-                  d="M15.6257 11.5293C15.6095 9.70293 17.0755 8.59893 17.1367 8.55693C16.1567 7.10093 14.6247 6.89893 14.0797 6.88493C12.7967 6.74893 11.5577 7.62493 10.9047 7.62493C10.2367 7.62493 9.22369 6.89893 8.16769 6.92093C6.76369 6.94293 5.45769 7.75693 4.72769 9.02893C3.22369 11.6169 4.36769 15.4129 5.81369 17.4769C6.52769 18.4889 7.37369 19.6209 8.46769 19.5769C9.53369 19.5289 9.9377 18.8729 10.2127 18.8729C11.1327 18.8729 11.5137 19.5769 12.6377 19.5529C13.7997 19.5289 14.5457 18.5169 15.2377 17.4969C16.0657 16.3169 16.4047 15.1689 16.4207 15.1129C16.3887 15.1009 15.6437 14.8209 15.6257 11.5293Z"
-                  fill="white"
-                />
-                <path
-                  d="M14.2337 5.68506C14.8297 4.94706 15.2337 3.92506 15.1177 2.88306C14.2657 2.91706 13.2017 3.47106 12.5737 4.19306C12.0177 4.83706 11.5337 5.88306 11.6657 6.89906C12.6257 6.96506 13.6217 6.41106 14.2337 5.68506Z"
-                  fill="white"
-                />
-              </svg>
-              Apple
+              {t('google')}
             </Button>
           </div>
         </form>
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            {t("register")}?{" "}
-            <Link href="/auth/register" className="text-primary hover:underline">
-              {t("register")}
+            {t('register')}?{' '}
+            <Link
+              href="/auth/register"
+              className="text-primary hover:underline"
+            >
+              {t('register')}
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
-

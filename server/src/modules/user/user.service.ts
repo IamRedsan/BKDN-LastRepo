@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/common/schemas/user.schema';
-import { UserStatus } from 'src/common/enums/user-status.enum';
 import { UserRole } from 'src/common/enums/user-role.enum';
 
 @Injectable()
@@ -12,13 +11,13 @@ export class UserService {
   async register(userData: Partial<User>): Promise<User> {
     const newUser = new this.userModel({
       ...userData,
-      status: userData.status || UserStatus.INACTIVE,
       role: userData.role || UserRole.USER,
       followers: userData.followers || [],
       following: userData.following || [],
       followersCount: userData.followersCount || 0,
       followingCount: userData.followingCount || 0,
       requiresUsernameChange: userData.requiresUsernameChange || false,
+      isBanned: userData.isBanned || false,
     });
     return newUser.save();
   }
@@ -38,17 +37,22 @@ export class UserService {
     }
     return user;
   }
-
   async update(id: string, userData: Partial<User>): Promise<User> {
-    const user = await this.findById(id);
-    Object.assign(user, userData);
-    return user.save();
+    const user = await this.userModel.findByIdAndUpdate(id, userData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
   async verifyEmail(userId: string): Promise<User> {
     const user = await this.findById(userId);
     user.isEmailVerified = true;
-    user.status = UserStatus.ACTIVE;
     return user.save();
   }
 
@@ -93,12 +97,6 @@ export class UserService {
   async delete(id: string): Promise<User> {
     const user = await this.findById(id);
     return user.deleteOne();
-  }
-
-  async updateStatus(id: string, status: UserStatus): Promise<User> {
-    const user = await this.findById(id);
-    user.status = status;
-    return user.save();
   }
 
   async updateRole(id: string, role: UserRole): Promise<User> {

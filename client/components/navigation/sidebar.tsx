@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   Search,
@@ -16,6 +16,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import CreatePostDialog from '@/components/create-post-dialog';
+import { useEffect, useRef } from 'react';
+import { useLogout } from '@/hooks/use-auth';
+import { useUserContext } from '@/contexts/userContext';
 
 interface SidebarProps {
   open: boolean;
@@ -25,26 +28,40 @@ interface SidebarProps {
 export default function Sidebar({ open, setOpen }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const prevOpenState = useRef(open);
+  const { mutate: logout } = useLogout();
+  const router = useRouter();
+  const { removeUser } = useUserContext();
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        removeUser();
+        router.push('/auth/login');
+      },
+    });
+  };
+
+  // Track when the open state actually changes for animations
+  useEffect(() => {
+    prevOpenState.current = open;
+  }, [open]);
 
   const navItems = [
-    { icon: Home, label: t('home'), href: '/' },
-    { icon: Search, label: t('search'), href: '/search' },
+    { icon: Home, label: t('home'), href: '/user' },
+    { icon: Search, label: t('search'), href: '/user/search' },
     {
       icon: PlusSquare,
       label: t('create'),
       href: '#',
       isCreate: true,
     },
-    { icon: Bell, label: t('notifications'), href: '/notifications' },
-    { icon: User, label: t('profile'), href: '/profile' },
+    { icon: Bell, label: t('notifications'), href: '/user/notifications' },
+    { icon: User, label: t('profile'), href: '/user/profile' },
   ];
 
   return (
-    <aside
-      className={`fixed left-0 top-0 z-40 h-screen bg-background border-r transition-all duration-300 flex flex-col ${
-        open ? 'w-64' : 'w-16'
-      }`}
-    >
+    <aside className="h-full bg-background border-r flex flex-col">
       <div className="flex items-center justify-between p-4">
         {open && <h1 className="text-xl font-bold">Threads</h1>}
         <Button
@@ -69,7 +86,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                       open ? 'justify-start px-3' : 'justify-center'
                     } py-2 rounded-md transition-colors hover:bg-accent hover:text-accent-foreground w-full`}
                   >
-                    <PlusSquare size={20} />
+                    <PlusSquare size={22} />
                     {open && item.label && (
                       <span className="ml-3">{item.label}</span>
                     )}
@@ -100,11 +117,11 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
       <div className="p-4 space-y-4">
         <Link
-          href="/settings"
+          href="/user/settings"
           className={`flex items-center ${
             open ? 'justify-start px-3' : 'justify-center'
           } py-2 rounded-md transition-colors ${
-            pathname === '/settings'
+            pathname === '/user/settings'
               ? 'bg-accent text-accent-foreground'
               : 'hover:bg-accent hover:text-accent-foreground'
           }`}
@@ -112,15 +129,15 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
           <Settings size={20} />
           {open && <span className="ml-3">{t('settings')}</span>}
         </Link>
-        <Link href="/auth/login">
-          <Button
-            variant="ghost"
-            className={`w-full ${!open ? 'justify-center' : 'justify-start'}`}
-          >
-            <LogOut size={20} />
-            {open && <span className="ml-3">{t('logout')}</span>}
-          </Button>
-        </Link>
+
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={`w-full ${!open ? 'justify-center' : 'justify-start'}`}
+        >
+          <LogOut size={20} />
+          {open && <span className="ml-3">{t('logout')}</span>}
+        </Button>
       </div>
     </aside>
   );

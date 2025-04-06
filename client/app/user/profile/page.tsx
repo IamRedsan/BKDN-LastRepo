@@ -9,6 +9,7 @@ import { Pencil, Settings } from 'lucide-react';
 import MainLayout from '@/components/layouts/main-layout';
 import PostCard from '@/components/posts/post-card';
 import { useLanguage } from '@/components/language-provider';
+import { useUserContext } from '@/contexts/userContext';
 
 // Mock user data
 const USER = {
@@ -97,6 +98,7 @@ const USER_REPOSTS = [
 export default function ProfilePage() {
   const [posts, setPosts] = useState(USER_POSTS);
   const [reposts, setReposts] = useState(USER_REPOSTS);
+  const { user } = useUserContext();
   const { t } = useLanguage();
 
   const handleLike = (postId: string) => {
@@ -170,7 +172,7 @@ export default function ProfilePage() {
 
           <div className="absolute -bottom-16 left-4 h-32 w-32 overflow-hidden rounded-full border-4 border-background">
             <Image
-              src={USER.avatar || '/placeholder.svg'}
+              src={user.avatar || '/placeholder.svg'}
               alt={USER.name}
               fill
               className="object-cover"
