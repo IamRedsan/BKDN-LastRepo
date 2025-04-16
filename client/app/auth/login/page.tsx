@@ -37,7 +37,7 @@ export default function LoginPage() {
       { username, password },
       {
         onSuccess: (data) => {
-          if (!data.isEmailVerified) {
+          if (data.isEmailVerified === false) {
             router.push('/auth/verify-email/' + data.emailToken!);
             return;
           }
@@ -82,12 +82,11 @@ export default function LoginPage() {
       }
 
       if (event.data.success) {
+        router.push('/user');
         toast({
           title: t('success'),
           description: t('googleLoginSuccess'),
         });
-
-        router.push('/user');
       } else {
         toast({
           title: t('error'),

@@ -38,8 +38,7 @@ client.interceptors.response.use(
         return client(originalRequest);
       } catch (refreshError) {
         // If refresh fails, redirect to login or handle as needed
-        const router = useRouter();
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
         return Promise.reject(refreshError);
       }
     }

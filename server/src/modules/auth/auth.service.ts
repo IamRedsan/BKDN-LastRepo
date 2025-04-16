@@ -204,7 +204,7 @@ export class AuthService {
     );
 
     const cookieConfig = this.configService.get(COOKIE_CONFIG);
-    res.cookie(cookieConfig.name, accessToken, cookieConfig);
+    res.cookie('accessToken', accessToken, cookieConfig);
     res.cookie('refreshToken', refreshToken, {
       ...cookieConfig,
       maxAge: 7 * 24 * 60 * 60 * 1000,

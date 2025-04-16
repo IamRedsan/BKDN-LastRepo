@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Moon, Sun, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,20 +11,43 @@ import { Separator } from '@/components/ui/separator';
 import MainLayout from '@/components/layouts/main-layout';
 import { useTheme } from '@/components/theme-provider';
 import { useLanguage } from '@/components/language-provider';
+import { useUpdateUserSetting } from '@/hooks/use-user';
+import { Language } from '@/enums/Language';
+import { Theme } from '@/enums/Theme';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const { mutate: updateUserSetting } = useUpdateUserSetting();
+  const { toast } = useToast();
 
   const handleSave = () => {
     setLoading(true);
 
-    // Simulate saving settings
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    updateUserSetting(
+      {
+        theme,
+        language,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t('success'),
+            description: t('settingUpdated'),
+          });
+          setLoading(false);
+        },
+        onError: () => {
+          toast({
+            title: t('error'),
+          });
+          setLoading(false);
+        },
+      }
+    );
   };
 
   return (
@@ -37,27 +60,25 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold">{t('language')}</h2>
             <RadioGroup
               value={language}
-              onValueChange={(value) =>
-                setLanguage(value as 'en' | 'vi' | 'ja')
-              }
+              onValueChange={(value) => setLanguage(value as Language)}
               className="space-y-2"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="en" id="en" />
+                <RadioGroupItem value={Language.English} id="en" />
                 <Label htmlFor="en" className="flex items-center space-x-2">
                   <Globe className="h-4 w-4" />
                   <span>English</span>
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="vi" id="vi" />
+                <RadioGroupItem value={Language.Vietnamese} id="vi" />
                 <Label htmlFor="vi" className="flex items-center space-x-2">
                   <Globe className="h-4 w-4" />
                   <span>Tiếng Việt</span>
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ja" id="ja" />
+                <RadioGroupItem value={Language.Japanese} id="ja" />
                 <Label htmlFor="ja" className="flex items-center space-x-2">
                   <Globe className="h-4 w-4" />
                   <span>日本語</span>
@@ -73,9 +94,9 @@ export default function SettingsPage() {
             <div className="flex items-center space-x-4">
               <Sun className="h-5 w-5" />
               <Switch
-                checked={theme === 'dark'}
+                checked={theme === Theme.Dark}
                 onCheckedChange={(checked) =>
-                  setTheme(checked ? 'dark' : 'light')
+                  setTheme(checked ? Theme.Dark : Theme.Light)
                 }
               />
               <Moon className="h-5 w-5" />
@@ -94,7 +115,7 @@ export default function SettingsPage() {
           <Separator />
 
           <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : t('save')}
+            {loading ? t('saving') : t('save')}
           </Button>
         </div>
       </div>

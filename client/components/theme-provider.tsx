@@ -1,60 +1,65 @@
-"use client"
+'use client';
 
-import type React from "react"
+import { Theme } from '@/enums/Theme';
+import type React from 'react';
 
-import { createContext, useContext, useState, useEffect } from "react"
-
-type Theme = "light" | "dark" | "system"
+import { createContext, useContext, useState, useEffect } from 'react';
 
 type ThemeContextType = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-}
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+};
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({
   children,
-  attribute = "class",
-  defaultTheme = "system",
+  attribute = 'class',
+  defaultTheme = Theme.System,
   enableSystem = true,
   disableTransitionOnChange = false,
 }: {
-  children: React.ReactNode
-  attribute?: string
-  defaultTheme?: Theme
-  enableSystem?: boolean
-  disableTransitionOnChange?: boolean
+  children: React.ReactNode;
+  attribute?: string;
+  defaultTheme?: Theme;
+  enableSystem?: boolean;
+  disableTransitionOnChange?: boolean;
 }) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme
-    if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
-      setTheme(savedTheme)
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+      setTheme(savedTheme);
     } else if (enableSystem) {
-      setTheme("system")
+      setTheme(Theme.System);
     }
-  }, [enableSystem])
+  }, [enableSystem]);
 
   useEffect(() => {
-    if (theme === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      document.documentElement.setAttribute(attribute, isDark ? "dark" : "light")
+    if (theme === 'system') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute(
+        attribute,
+        isDark ? 'dark' : 'light'
+      );
     } else if (theme) {
-      localStorage.setItem("theme", theme)
-      document.documentElement.setAttribute(attribute, theme)
+      localStorage.setItem('theme', theme);
+      document.documentElement.setAttribute(attribute, theme);
     }
-  }, [theme, attribute])
+  }, [theme, attribute]);
 
-  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
+  const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider")
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
-  return context
+  return context;
 }
-
