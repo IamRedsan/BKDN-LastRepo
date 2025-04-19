@@ -9,6 +9,9 @@ import UserProvider from '@/contexts/userContext';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/shared/queryClient';
 import { Toaster } from '@/components/ui/toaster';
+import { LoadingProvider } from '@/contexts/loading-context';
+import { LoadingOverlay } from '@/components/loading/loading-overlay';
+import { Theme } from '@/enums/Theme';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,15 +26,18 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme={Theme.System}
             enableSystem
             disableTransitionOnChange
           >
             <LanguageProvider>
-              <UserProvider>
-                {children}
-                <Toaster />
-              </UserProvider>
+              <LoadingProvider>
+                <LoadingOverlay />
+                <UserProvider>
+                  <Toaster />
+                  {children}
+                </UserProvider>
+              </LoadingProvider>
             </LanguageProvider>
           </ThemeProvider>
         </QueryClientProvider>

@@ -1,10 +1,9 @@
 'use client';
 
+import { Language } from '@/enums/Language';
 import type React from 'react';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-
-type Language = 'en' | 'vi' | 'ja';
 
 type LanguageContextType = {
   language: Language;
@@ -72,6 +71,28 @@ const translations = {
     resendEmailFailed: 'Failed to resend verification email.',
     name: 'Name',
     registerFailed: 'Account or email already exists or is invalid.',
+    followers: 'Followers',
+    following: 'Following',
+    loading_image: 'Loading image...',
+    avatarUpdated: 'Avatar updated successfully!',
+    avatarUpdateFailed: 'Failed to update avatar.',
+    wallpaperUpdated: 'Wallpaper updated successfully!',
+    wallpaperUpdateFailed: 'Failed to update wallpaper.',
+    uploading: 'Uploading...',
+    uploadFailed: 'Upload failed.',
+    nameAndUsernameRequired: 'Name and username are required fields.',
+    profileUpdated: 'Profile has been updated.',
+    saving: 'Saving...',
+    settingUpdated: 'Setting has been updated.',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    passwordChanged: 'Password changed successfully!',
+    passwordChangeFailed: 'Failed to change password.',
+    passwordNotSuitable: 'Password does not meet the requirements.',
+    passwordsDoNotMatch: 'Passwords do not match.',
+    passwordRequirements:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+    passwordMustMatch: 'Password must match the confirmation password.',
   },
   vi: {
     home: 'Trang chủ',
@@ -133,6 +154,28 @@ const translations = {
     resendEmailFailed: 'Gửi lại email xác minh thất bại.',
     name: 'Tên',
     registerFailed: 'Tài khoản hoặc email đã tồn tại hoặc không hợp lệ.',
+    followers: 'Người theo dõi',
+    following: 'Người đang theo dõi',
+    loading_image: 'Đang tải ảnh...',
+    avatarUpdated: 'Cập nhật ảnh đại diện thành công!',
+    avatarUpdateFailed: 'Cập nhật ảnh đại diện thất bại.',
+    wallpaperUpdated: 'Cập nhật hình nền thành công!',
+    wallpaperUpdateFailed: 'Cập nhật hình nền thất bại.',
+    uploading: 'Đang tải lên...',
+    uploadFailed: 'Tải lên thất bại.',
+    nameAndUsernameRequired: 'Tên và tên người dùng là các trường bắt buộc.',
+    profileUpdated: 'Thông tin cá nhân đã được cập nhật. ',
+    saving: 'Đang lưu...',
+    settingUpdated: 'Cài đặt đã được cập nhật.',
+    currentPassword: 'Mật khẩu hiện tại',
+    newPassword: 'Mật khẩu mới',
+    passwordChanged: 'Đổi mật khẩu thành công!',
+    passwordChangeFailed: 'Đổi mật khẩu thất bại.',
+    passwordNotSuitable: 'Mật khẩu không đáp ứng yêu cầu.',
+    passwordsDoNotMatch: 'Mật khẩu không khớp.',
+    passwordRequirements:
+      'Mật khẩu phải chứa ít nhất một chữ cái viết hoa, một chữ cái viết thường, một số và một ký tự đặc biệt.',
+    passwordMustMatch: 'Mật khẩu phải khớp với mật khẩu xác nhận.',
   },
   ja: {
     home: 'ホーム',
@@ -192,6 +235,28 @@ const translations = {
     resendEmailFailed: '確認メールの再送信に失敗しました。',
     name: '名前',
     registerFailed: 'アカウントまたはメールが存在するか、無効です。',
+    followers: 'フォロワー',
+    following: 'フォロー中',
+    loading_image: '画像を読み込み中...',
+    avatarUpdated: 'アバターが正常に更新されました!',
+    avatarUpdateFailed: 'アバターの更新に失敗しました。',
+    wallpaperUpdated: '壁紙が正常に更新されました!',
+    wallpaperUpdateFailed: '壁紙の更新に失敗しました。',
+    uploading: 'アップロード中...',
+    uploadFailed: 'アップロードに失敗しました。',
+    nameAndUsernameRequired: '名前とユーザー名は必須フィールドです。',
+    profileUpdated: 'プロフィールが更新されました。',
+    saving: '保存中...',
+    settingUpdated: '設定が更新されました。',
+    currentPassword: '現在のパスワード',
+    newPassword: '新しいパスワード',
+    passwordChanged: 'パスワードが正常に変更されました!',
+    passwordChangeFailed: 'パスワードの変更に失敗しました。',
+    passwordNotSuitable: 'パスワードが要件を満たしていません。',
+    passwordsDoNotMatch: 'パスワードが一致しません。',
+    passwordRequirements:
+      'パスワードには、少なくとも1つの大文字、1つの小文字、1つの数字、および1つの特殊文字を含める必要があります。',
+    passwordMustMatch: 'パスワードは確認用パスワードと一致する必要があります。',
   },
 };
 
@@ -200,7 +265,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>(Language.English);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language') as Language;

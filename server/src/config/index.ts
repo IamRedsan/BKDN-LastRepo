@@ -5,6 +5,7 @@ import AppConfig from './app.config';
 import CorsConfig from './cors.config';
 import CookieConfig from './cookie.config';
 import EmailConfig from './email.config';
+import CloudinaryConfig from './cloudinary.config';
 
 export default [
   DatabaseConfig,
@@ -14,4 +15,5 @@ export default [
   CorsConfig,
   CookieConfig,
   EmailConfig,
+  CloudinaryConfig
 ];

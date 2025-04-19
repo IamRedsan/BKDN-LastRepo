@@ -17,6 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -56,6 +58,7 @@ export default function RegisterPage() {
           }
         },
         onError: (error) => {
+          setShowPasswordRequirements(true);
           toast({
             title: t('error'),
             description: t('somethingWentWrong'),
@@ -153,6 +156,12 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {showPasswordRequirements && (
+              <p className="text-sm text-red-500 mt-1">
+                {t('passwordRequirements')}
+              </p>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
               <div className="relative">
@@ -181,6 +190,11 @@ export default function RegisterPage() {
                 </Button>
               </div>
             </div>
+            {showPasswordRequirements && (
+              <p className="text-sm text-red-500 mt-1">
+                {t('passwordMustMatch')}
+              </p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

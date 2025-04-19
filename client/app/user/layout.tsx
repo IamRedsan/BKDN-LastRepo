@@ -1,8 +1,8 @@
 'use client';
 
+import { useLanguage } from '@/components/language-provider';
 import { useUserContext } from '@/contexts/userContext';
-import { useUser } from '@/hooks/use-user';
-import { useRouter } from 'next/navigation';
+import { useLoading } from '@/hooks/use-loading';
 import { useEffect } from 'react';
 
 export default function MainLayout({
@@ -10,25 +10,27 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useUser();
-  const { setUser } = useUserContext();
-  const router = useRouter();
-
+  const { whoami, user, isLoading } = useUserContext();
+  const { withLoading } = useLoading();
+  const { t } = useLanguage();
   useEffect(() => {
-    if (!isLoading) {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-        router.push('/auth/login');
-      }
+    if (!user) {
+      withLoading(
+        async () => {
+          await whoami();
+        },
+        {
+          message: t('loading'),
+          type: 'spinner',
+        }
+      );
     }
-  }, [user, isLoading, setUser, router]);
+  }, [user]);
 
   if (isLoading)
     return (
       <div className="flex items-center justify-center w-full h-full">
-        <div className="loader"></div>
+        {/* <div className="loader"></div> */}
       </div>
     );
 

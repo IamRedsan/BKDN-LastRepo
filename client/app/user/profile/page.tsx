@@ -163,7 +163,7 @@ export default function ProfilePage() {
         <div className="relative">
           <div className="h-48 w-full overflow-hidden rounded-lg">
             <Image
-              src={USER.banner || '/placeholder.svg'}
+              src={user?.wallpaper || '/placeholder.svg'}
               alt="Profile banner"
               fill
               className="object-cover"
@@ -172,15 +172,15 @@ export default function ProfilePage() {
 
           <div className="absolute -bottom-16 left-4 h-32 w-32 overflow-hidden rounded-full border-4 border-background">
             <Image
-              src={user.avatar || '/placeholder.svg'}
+              src={user?.avatar || '/placeholder.svg'}
               alt={USER.name}
               fill
               className="object-cover"
             />
           </div>
 
-          <div className="absolute right-4 top-4 flex space-x-2">
-            <Link href="/settings">
+          <div className="absolute right-4 top-4 flex space-x-2 ">
+            <Link href="/user/settings">
               <Button
                 variant="outline"
                 size="icon"
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                 <Settings size={18} />
               </Button>
             </Link>
-            <Link href="/profile/edit">
+            <Link href="/user/profile/edit">
               <Button
                 variant="outline"
                 size="icon"
@@ -203,42 +203,32 @@ export default function ProfilePage() {
 
         <div className="mt-24 space-y-4">
           <div className="mt-16">
-            <h1 className="text-2xl font-bold">{USER.name}</h1>
-            <p className="text-muted-foreground">@{USER.username}</p>
+            <h1 className="text-2xl font-bold">{user?.name ?? ''}</h1>
+            <p className="text-muted-foreground">@{user?.username ?? ''}</p>
           </div>
 
-          <p>{USER.bio}</p>
-
-          {USER.website && (
-            <a
-              href={USER.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              {USER.website.replace(/(^\w+:|^)\/\//, '')}
-            </a>
-          )}
+          <p>{user?.bio ?? ''}</p>
 
           <div className="flex space-x-4">
             <span>
-              <strong>{USER.followers}</strong> {t('followUser')}ers
+              <strong>{user?.followersCount ?? 0}</strong> {t('followers')}
             </span>
             <span>
-              <strong>{USER.following}</strong> {t('followUser')}ing
+              <strong>{user?.followingCount ?? 0}</strong> {t('following')}
             </span>
           </div>
 
           <Button className="w-full">{t('followUser')}</Button>
         </div>
 
+        {/* Posts and Reposts */}
         <Tabs defaultValue="posts">
           <TabsList className="w-full">
             <TabsTrigger value="posts" className="flex-1">
-              {t('post')}s
+              {t('post')}
             </TabsTrigger>
             <TabsTrigger value="reposts" className="flex-1">
-              Re{t('post')}s
+              {t('repost')}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="posts" className="space-y-4 mt-4">
