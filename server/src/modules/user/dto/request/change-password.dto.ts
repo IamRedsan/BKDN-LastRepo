@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ChangePasswordRequestDto {
   @ApiProperty({
     example: 'Password123!',
-    description: 'Password of the user',
+    description: 'Old Password of the user',
   })
   @IsString()
   @IsNotEmpty()
@@ -17,7 +17,7 @@ export class ChangePasswordRequestDto {
 
   @ApiProperty({
     example: 'Password123!',
-    description: 'Password of the user',
+    description: 'New Password of the user',
   })
   @IsString()
   @IsNotEmpty()

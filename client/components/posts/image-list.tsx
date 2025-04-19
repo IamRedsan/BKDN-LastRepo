@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface ImageFile {
   file: File | { url: string };
@@ -21,7 +21,7 @@ const ImageList: React.FC<ImageListProps> = ({
   useEffect(() => {
     if (files.length > 0) {
       const newImages = files.map((file) => {
-        const url = 'url' in file ? file.url : URL.createObjectURL(file);
+        const url = "url" in file ? file.url : URL.createObjectURL(file);
         return { file, url };
       });
       setListImage(newImages);

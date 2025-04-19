@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/components/language-provider';
-import { useRegister } from '@/hooks/use-auth';
+import { useRegister } from '@/hooks/api/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {

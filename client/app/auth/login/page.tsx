@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/components/language-provider';
-import { useLogin } from '@/hooks/use-auth';
+import { useLogin } from '@/hooks/api/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Role } from '@/enums/Role';
 

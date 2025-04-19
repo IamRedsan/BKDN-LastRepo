@@ -109,12 +109,13 @@ export default function FeedPage() {
       <h1 className="text-2xl font-bold">{t('home')}</h1>
       <div className="space-y-4">
         {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onLike={handleLike}
-            onRepost={handleRepost}
-          />
+          // <PostCard
+          //   key={post.id}
+          //   post={post}
+          //   onLike={handleLike}
+          //   onRepost={handleRepost}
+          // />
+          <div></div>
         ))}
       </div>
     </div>

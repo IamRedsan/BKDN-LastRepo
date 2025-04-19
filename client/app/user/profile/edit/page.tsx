@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import type React from 'react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Camera, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import MainLayout from '@/components/layouts/main-layout';
-import { useLanguage } from '@/components/language-provider';
-import { useUserContext } from '@/contexts/userContext';
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Camera, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import MainLayout from "@/components/layouts/main-layout";
+import { useLanguage } from "@/components/language-provider";
+import { useUserContext } from "@/contexts/userContext";
 import {
   useUpdateUserAvatar,
   useUpdateUserInfo,
   useUpdateWallpaper,
-} from '@/hooks/use-user';
-import { useToast } from '@/hooks/use-toast';
-import { useLoading } from '@/hooks/use-loading';
+} from "@/hooks/api/use-user";
+import { useToast } from "@/hooks/use-toast";
+import { useLoading } from "@/hooks/use-loading";
 
 export default function EditProfilePage() {
   const { user, setUser } = useUserContext();
   const [profileData, setProfileData] = useState({
-    name: user?.name ?? '',
-    username: user?.username ?? '',
-    bio: user?.bio ?? '',
-    avatar: user?.avatar ?? '',
-    wallpaper: user?.wallpaper ?? '',
+    name: user?.name ?? "",
+    username: user?.username ?? "",
+    bio: user?.bio ?? "",
+    avatar: user?.avatar ?? "",
+    wallpaper: user?.wallpaper ?? "",
   });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -44,8 +44,8 @@ export default function EditProfilePage() {
 
     if (!profileData.name || !profileData.username) {
       toast({
-        title: t('error'),
-        description: t('nameAndUsernameRequired'),
+        title: t("error"),
+        description: t("nameAndUsernameRequired"),
       });
       setLoading(false);
       return;
@@ -55,31 +55,24 @@ export default function EditProfilePage() {
       onSuccess: (data) => {
         setUser(data);
         toast({
-          title: t('success'),
-          description: t('profileUpdated'),
+          title: t("success"),
+          description: t("profileUpdated"),
         });
         setLoading(false);
       },
       onError: (error) => {
         toast({
-          title: t('error'),
+          title: t("error"),
           description: error.message,
         });
         setLoading(false);
       },
     });
-
-    // TODO: Gọi API để cập nhật thông tin (name, username, bio,...)
-
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/user/profile');
-    }, 1500);
   };
 
   const handleAvatarChange = async (file: File) => {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append("avatar", file);
 
     updateUserAvatar(formData, {
       onSuccess: (data) => {
@@ -90,14 +83,14 @@ export default function EditProfilePage() {
         }));
         setLoading(false);
         toast({
-          title: t('success'),
-          description: t('avatarUpdated'),
+          title: t("success"),
+          description: t("avatarUpdated"),
         });
       },
       onError: (eror) => {
         toast({
-          title: t('error'),
-          description: t('avatarUpdateFailed'),
+          title: t("error"),
+          description: t("avatarUpdateFailed"),
         });
       },
     });
@@ -105,7 +98,7 @@ export default function EditProfilePage() {
 
   const handleWallpaperChange = async (file: File) => {
     const formData = new FormData();
-    formData.append('wallpaper', file);
+    formData.append("wallpaper", file);
 
     updateUserWallpaper(formData, {
       onSuccess: (data) => {
@@ -116,24 +109,24 @@ export default function EditProfilePage() {
         }));
         setLoading(false);
         toast({
-          title: t('success'),
-          description: t('wallpaperUpdated'),
+          title: t("success"),
+          description: t("wallpaperUpdated"),
         });
       },
       onError: () => {
         toast({
-          title: t('error'),
-          description: t('wallpaperUpdateFailed'),
+          title: t("error"),
+          description: t("wallpaperUpdateFailed"),
         });
       },
     });
   };
 
-  const pickImage = async (type: 'avatar' | 'wallpaper') => {
+  const pickImage = async (type: "avatar" | "wallpaper") => {
     try {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
       input.click();
 
       input.onchange = async () => {
@@ -141,10 +134,10 @@ export default function EditProfilePage() {
           const file = input.files[0];
           setLoading(true);
           toast({
-            title: t('loading_image'),
-            description: t('uploading'),
+            title: t("loading_image"),
+            description: t("uploading"),
           });
-          if (type === 'wallpaper') {
+          if (type === "wallpaper") {
             await handleWallpaperChange(file);
           } else {
             await handleAvatarChange(file);
@@ -152,10 +145,10 @@ export default function EditProfilePage() {
         }
       };
     } catch (error) {
-      console.error('Error picking image:', error);
+      console.error("Error picking image:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể chọn ảnh. Vui lòng thử lại.',
+        title: "Lỗi",
+        description: "Không thể chọn ảnh. Vui lòng thử lại.",
       });
     }
   };
@@ -171,16 +164,16 @@ export default function EditProfilePage() {
   };
 
   return (
-    <MainLayout>
+    <div>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{t('editProfile')}</h1>
+        <h1 className="text-2xl font-bold">{t("editProfile")}</h1>
 
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="relative">
               <div className="h-48 w-full overflow-hidden rounded-lg bg-muted">
                 <Image
-                  src={profileData.wallpaper || '/placeholder.svg'}
+                  src={profileData.wallpaper || "/placeholder.svg"}
                   alt="Profile banner"
                   fill
                   className="object-cover"
@@ -189,7 +182,7 @@ export default function EditProfilePage() {
                   <label htmlFor="wallpaper-upload" className="cursor-pointer">
                     <Button
                       variant="secondary"
-                      onClick={() => pickImage('wallpaper')}
+                      onClick={() => pickImage("wallpaper")}
                       size="icon"
                       type="button"
                     >
@@ -201,7 +194,7 @@ export default function EditProfilePage() {
 
               <div className="absolute -bottom-16 left-4 h-32 w-32 overflow-hidden rounded-full border-4 border-background">
                 <Image
-                  src={profileData.avatar || '/placeholder.svg'}
+                  src={profileData.avatar || "/placeholder.svg"}
                   alt="Profile avatar"
                   fill
                   className="object-cover"
@@ -209,7 +202,7 @@ export default function EditProfilePage() {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity hover:opacity-100">
                   <label htmlFor="avatar-upload" className="cursor-pointer">
                     <Button
-                      onClick={() => pickImage('avatar')}
+                      onClick={() => pickImage("avatar")}
                       variant="secondary"
                       size="icon"
                       type="button"
@@ -223,20 +216,20 @@ export default function EditProfilePage() {
 
             <div className="pt-12 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t('displayName')}</Label>
+                <Label htmlFor="name">{t("displayName")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="name"
                     value={profileData.name}
-                    onChange={(e) => handleInputChange(e, 'name')}
+                    onChange={(e) => handleInputChange(e, "name")}
                     className="pl-10"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">{t('username')}</Label>
+                <Label htmlFor="username">{t("username")}</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-muted-foreground">
                     @
@@ -244,18 +237,18 @@ export default function EditProfilePage() {
                   <Input
                     id="username"
                     value={profileData.username}
-                    onChange={(e) => handleInputChange(e, 'username')}
+                    onChange={(e) => handleInputChange(e, "username")}
                     className="pl-10"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">{t('bio')}</Label>
+                <Label htmlFor="bio">{t("bio")}</Label>
                 <Textarea
                   id="bio"
                   value={profileData.bio}
-                  onChange={(e) => handleInputChange(e, 'bio')}
+                  onChange={(e) => handleInputChange(e, "bio")}
                   rows={4}
                 />
               </div>
@@ -264,18 +257,18 @@ export default function EditProfilePage() {
 
           <div className="flex space-x-2">
             <Button type="submit" disabled={loading} onClick={handleSave}>
-              {loading ? t('saving') : t('save')}
+              {loading ? t("saving") : t("save")}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/user/profile')}
+              onClick={() => router.push("/user/profile/" + user?.username)}
             >
-              {t('cancel')}
+              {t("cancel")}
             </Button>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^11.0.12",
     "@nestjs/swagger": "^11.1.0",
     "@types/nodemailer": "^6.4.17",
+    "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "class-validator": "^0.14.1",
     "cloudinary": "^2.6.0",
@@ -37,12 +38,14 @@
     "multer": "1.4.5-lts.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.0",
+    "openai": "^4.95.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "server": "file:",
+    "sharp": "^0.34.1",
     "streamifier": "^0.1.1"
   },
   "devDependencies": {
@@ -84,5 +87,6 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
 }

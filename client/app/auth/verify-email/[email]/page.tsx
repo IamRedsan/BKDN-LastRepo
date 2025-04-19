@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { useParams } from 'next/navigation';
-import { useResendEmailVerification } from '@/hooks/use-auth';
+import { useResendEmailVerification } from '@/hooks/api/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 export default function VerifyEmailPage() {

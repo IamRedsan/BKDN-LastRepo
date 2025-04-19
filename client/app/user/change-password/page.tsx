@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import type React from 'react';
+import type React from "react";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import MainLayout from '@/components/layouts/main-layout';
-import { useLanguage } from '@/components/language-provider';
-import { useToast } from '@/hooks/use-toast';
-import { useUpdateUserPassword } from '@/hooks/use-user';
-import { set } from 'date-fns';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import MainLayout from "@/components/layouts/main-layout";
+import { useLanguage } from "@/components/language-provider";
+import { useToast } from "@/hooks/use-toast";
+import { useUpdateUserPassword } from "@/hooks/api/use-user";
+import { set } from "date-fns";
 
 export default function ChangePasswordPage() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -38,8 +38,8 @@ export default function ChangePasswordPage() {
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
-        title: t('error'),
-        description: t('emptyFields'),
+        title: t("error"),
+        description: t("emptyFields"),
       });
       return;
     }
@@ -51,8 +51,8 @@ export default function ChangePasswordPage() {
 
     if (!passwordRegex.test(newPassword)) {
       toast({
-        title: t('error'),
-        description: t('passwordNotSuitable'),
+        title: t("error"),
+        description: t("passwordNotSuitable"),
       });
       setShowPasswordRequirements(true);
       return;
@@ -70,14 +70,14 @@ export default function ChangePasswordPage() {
         onSuccess: (data) => {
           if (data) {
             toast({
-              title: t('success'),
-              description: t('passwordChanged'),
+              title: t("success"),
+              description: t("passwordChanged"),
             });
-            router.push('/user/settings');
+            router.push("/user/settings");
           } else {
             toast({
-              title: t('error'),
-              description: t('passwordChangeFailed'),
+              title: t("error"),
+              description: t("passwordChangeFailed"),
             });
             setShowPasswordRequirements(true);
           }
@@ -85,8 +85,8 @@ export default function ChangePasswordPage() {
         },
         onError: (error) => {
           toast({
-            title: t('error'),
-            description: t('passwordChangeFailed'),
+            title: t("error"),
+            description: t("passwordChangeFailed"),
           });
           setLoading(false);
         },
@@ -94,19 +94,19 @@ export default function ChangePasswordPage() {
     );
   };
   return (
-    <MainLayout>
+    <div>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{t('changePassword')}</h1>
+        <h1 className="text-2xl font-bold">{t("changePassword")}</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">{t('currentPassword')}</Label>
+              <Label htmlFor="currentPassword">{t("currentPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="currentPassword"
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showCurrentPassword ? "text" : "password"}
                   className="pl-10 pr-10"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -129,12 +129,12 @@ export default function ChangePasswordPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newPassword">{t('newPassword')}</Label>
+              <Label htmlFor="newPassword">{t("newPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="newPassword"
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showNewPassword ? "text" : "password"}
                   className="pl-10 pr-10"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -156,18 +156,18 @@ export default function ChangePasswordPage() {
               </div>
               {showPasswordRequirements && (
                 <p className="text-sm text-red-500 mt-1">
-                  {t('passwordRequirements')}
+                  {t("passwordRequirements")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
+              <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   className="pl-10 pr-10"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -189,7 +189,7 @@ export default function ChangePasswordPage() {
               </div>
               {showMustMatch && (
                 <p className="text-sm text-red-500 mt-1">
-                  {t('passwordMustMatch')}
+                  {t("passwordMustMatch")}
                 </p>
               )}
             </div>
@@ -197,18 +197,18 @@ export default function ChangePasswordPage() {
 
           <div className="flex space-x-2">
             <Button type="submit" disabled={loading}>
-              {loading ? t('saving') : t('save')}
+              {loading ? t("saving") : t("save")}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/settings')}
+              onClick={() => router.push("/settings")}
             >
-              {t('cancel')}
+              {t("cancel")}
             </Button>
           </div>
         </form>
       </div>
-    </MainLayout>
+    </div>
   );
 }

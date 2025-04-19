@@ -1,58 +1,58 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Camera, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import MainLayout from "@/components/layouts/main-layout"
-import { useLanguage } from "@/components/language-provider"
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Camera, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import MainLayout from "@/components/layouts/main-layout";
+import { useLanguage } from "@/components/language-provider";
 
 export default function CreatePostPage() {
-  const [content, setContent] = useState("")
-  const [images, setImages] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
-  const { t } = useLanguage()
+  const [content, setContent] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { t } = useLanguage();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newImages = Array.from(e.target.files).map((file) => {
         // In a real app, we would upload the file to a server and get a URL
         // For now, we'll use a placeholder
-        return `/placeholder.svg?height=400&width=600`
-      })
+        return `/placeholder.svg?height=400&width=600`;
+      });
 
-      setImages([...images, ...newImages])
+      setImages([...images, ...newImages]);
     }
-  }
+  };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!content.trim() && images.length === 0) {
-      return
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     // Simulate post creation
     setTimeout(() => {
-      setLoading(false)
-      router.push("/")
-    }, 1500)
-  }
+      setLoading(false);
+      router.push("/");
+    }, 1500);
+  };
 
   return (
-    <MainLayout>
+    <div>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">{t("create")}</h1>
 
@@ -75,9 +75,16 @@ export default function CreatePostPage() {
               />
 
               {images.length > 0 && (
-                <div className={`grid gap-2 ${images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+                <div
+                  className={`grid gap-2 ${
+                    images.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                  }`}
+                >
                   {images.map((image, index) => (
-                    <div key={index} className="relative aspect-square overflow-hidden rounded-md">
+                    <div
+                      key={index}
+                      className="relative aspect-square overflow-hidden rounded-md"
+                    >
                       <Image
                         src={image || "/placeholder.svg"}
                         alt={`Post image ${index + 1}`}
@@ -99,7 +106,12 @@ export default function CreatePostPage() {
               )}
 
               <div className="flex items-center justify-between">
-                <Button type="button" variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Camera size={20} />
                 </Button>
                 <input
@@ -111,7 +123,10 @@ export default function CreatePostPage() {
                   className="hidden"
                 />
 
-                <Button type="submit" disabled={loading || (!content.trim() && images.length === 0)}>
+                <Button
+                  type="submit"
+                  disabled={loading || (!content.trim() && images.length === 0)}
+                >
                   {loading ? "Posting..." : t("post")}
                 </Button>
               </div>
@@ -119,7 +134,6 @@ export default function CreatePostPage() {
           </div>
         </form>
       </div>
-    </MainLayout>
-  )
+    </div>
+  );
 }
-

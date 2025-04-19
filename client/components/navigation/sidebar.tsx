@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import CreatePostDialog from '@/components/create-post-dialog';
 import { useEffect, useRef } from 'react';
-import { useLogout } from '@/hooks/use-auth';
+import { useLogout } from '@/hooks/api/use-auth';
 import { useUserContext } from '@/contexts/userContext';
 
 interface SidebarProps {
@@ -31,7 +31,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
   const prevOpenState = useRef(open);
   const { mutate: logout } = useLogout();
   const router = useRouter();
-  const { removeUser } = useUserContext();
+  const { user, removeUser } = useUserContext(); // Lấy user từ context
 
   const handleLogout = () => {
     logout(undefined, {
@@ -57,7 +57,11 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
       isCreate: true,
     },
     { icon: Bell, label: t('notifications'), href: '/user/notifications' },
-    { icon: User, label: t('profile'), href: '/user/profile' },
+    {
+      icon: User,
+      label: t('profile'),
+      href: `/user/profile/${user?.username ?? ''}`,
+    },
   ];
 
   return (

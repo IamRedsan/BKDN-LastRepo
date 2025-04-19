@@ -1,19 +1,16 @@
-import { Language } from '@/enums/Language';
-import { Theme } from '@/enums/Theme';
-import { IUser } from '@/interfaces/user';
-import { client } from '@/shared/axiosClient';
-import { queryClient } from '@/shared/queryClient';
-import { useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import { Language } from "@/enums/Language";
+import { Theme } from "@/enums/Theme";
+import { IThread } from "@/interfaces/thread";
+import { IUser } from "@/interfaces/user";
+import { client } from "@/shared/axiosClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 export const useUpdateUser = () => {
   return useMutation({
     mutationFn: async (userData: Partial<IUser>) => {
-      const response = await client.put('/user', userData);
+      const response = await client.put("/user", userData);
       return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['user'], data);
     },
   });
 };
@@ -21,9 +18,9 @@ export const useUpdateUser = () => {
 export const useUpdateUserAvatar = () => {
   return useMutation<IUser, AxiosError, FormData>({
     mutationFn: async (formData: FormData) => {
-      const response = await client.patch('/user/avatar', formData, {
+      const response = await client.patch("/user/avatar", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
@@ -34,9 +31,9 @@ export const useUpdateUserAvatar = () => {
 export const useUpdateWallpaper = () => {
   return useMutation<IUser, AxiosError, FormData>({
     mutationFn: async (formData: FormData) => {
-      const response = await client.patch('/user/wallpaper', formData, {
+      const response = await client.patch("/user/wallpaper", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
@@ -53,7 +50,7 @@ interface UpdateUserInfoRequest {
 export const useUpdateUserInfo = () => {
   return useMutation<IUser, AxiosError, UpdateUserInfoRequest>({
     mutationFn: async (userData: UpdateUserInfoRequest) => {
-      const response = await client.patch('/user/info', userData);
+      const response = await client.patch("/user/info", userData);
       return response.data;
     },
   });
@@ -67,7 +64,7 @@ interface UpdateUserSettingRequest {
 export const useUpdateUserSetting = () => {
   return useMutation<IUser, AxiosError, UpdateUserSettingRequest>({
     mutationFn: async (userData: UpdateUserSettingRequest) => {
-      const response = await client.patch('/user/setting', userData);
+      const response = await client.patch("/user/setting", userData);
       return response.data;
     },
   });
@@ -82,7 +79,23 @@ interface UpdateUserPasswordRequest {
 export const useUpdateUserPassword = () => {
   return useMutation<boolean, AxiosError, UpdateUserPasswordRequest>({
     mutationFn: async (passwordData: UpdateUserPasswordRequest) => {
-      const response = await client.patch('/user/password', passwordData);
+      const response = await client.patch("/user/password", passwordData);
+      return response.data;
+    },
+  });
+};
+
+interface ProfileResponse {
+  user: IUser;
+  threads: IThread[];
+  reThreads: IThread[];
+}
+
+export const useGetProfile = (username: string) => {
+  return useQuery<ProfileResponse, AxiosError>({
+    queryKey: ["userProfile", username], // Dùng key độc nhất cho query
+    queryFn: async () => {
+      const response = await client.get(`/profile/${username}`);
       return response.data;
     },
   });

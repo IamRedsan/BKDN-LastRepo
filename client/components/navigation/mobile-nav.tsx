@@ -5,16 +5,22 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, PlusSquare, Bell, User } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import CreatePostDialog from '@/components/create-post-dialog';
+import { useUserContext } from '@/contexts/userContext';
 
 export default function MobileNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { user } = useUserContext();
 
   const navItems = [
     { icon: Home, label: t('home'), href: '/user' },
     { icon: Search, label: t('search'), href: '/user/search' },
     { icon: Bell, label: t('notifications'), href: '/user/notifications' },
-    { icon: User, label: t('profile'), href: '/user/profile' },
+    {
+      icon: User,
+      label: t('profile'),
+      href: `/user/profile/${user?.username ?? ''}`,
+    },
   ];
 
   return (
