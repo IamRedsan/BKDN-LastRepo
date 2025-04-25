@@ -108,6 +108,8 @@ const translations = {
     no_comment_yet: "No comments yet.",
     comment_created: "Comment created successfully!",
     comment_create_failed: "Failed to create comment.",
+    noPosts: "No post yet.",
+    noReposts: "No reposts yet.",
   },
   vi: {
     home: "Trang chủ",
@@ -206,6 +208,8 @@ const translations = {
     no_comment_yet: "Chưa có bình luận nào.",
     comment_created: "Bình luận đã được tạo thành công!",
     comment_create_failed: "Tạo bình luận thất bại.",
+    noPosts: "Chưa có bài viết nào.",
+    noReposts: "Chưa có bài đăng lại nào.",
   },
   ja: {
     home: "ホーム",
@@ -302,6 +306,8 @@ const translations = {
     no_comment_yet: "まだコメントはありません。",
     comment_created: "コメントが正常に作成されました!",
     comment_create_failed: "コメントの作成に失敗しました。",
+    noPosts: "まだポストはありません。",
+    noReposts: "まだリポストはありません。",
   },
 };
 

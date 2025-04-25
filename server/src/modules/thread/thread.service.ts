@@ -79,17 +79,16 @@ export class ThreadService {
     const isFollower = user.followers.some(
       followerId => followerId.toString() === currentUser._id.toString(),
     );
-
     // Lấy thread dựa trên visibility
     const visibilityFilter = isFollower
       ? { $in: [Visibility.PUBLIC, Visibility.FOLLOWER_ONLY] } // Nếu là follower, lấy PUBLIC và FOLLOWER_ONLY
       : { $eq: Visibility.PUBLIC }; // Nếu không phải follower, chỉ lấy PUBLIC
 
     const threads = await this.threadModel
-      .find({ userId: user._id, visibility: visibilityFilter, parentThreadId: null })
+      .find({ user: user._id, visibility: visibilityFilter, parentThreadId: null })
       .sort({ createdAt: -1 })
       .populate({
-        path: 'userId',
+        path: 'user',
         select: 'name avatar username', // Chỉ lấy name và avatar
       })
       .exec();
@@ -98,7 +97,7 @@ export class ThreadService {
       .find({ reThreadBy: user._id, visibility: visibilityFilter, parentThreadId: null })
       .sort({ createdAt: -1 })
       .populate({
-        path: 'userId',
+        path: 'user',
         select: 'name avatar username', // Chỉ lấy name và avatar
       })
       .exec();
@@ -254,16 +253,45 @@ export class ThreadService {
     userId: string,
     content: string,
     visibility: string,
-    media: Multer.File[],
+    media?: Multer.File[],
+    oldMedia?: string[],
   ): Promise<ThreadResponseDto> {
+    // Tìm thread trong DB
     const thread = await this.threadModel.findById(threadId);
     if (!thread) {
       throw new NotFoundException('Thread not found');
     }
+    // Kiểm tra quyền chỉnh sửa
     if (thread.user.toString() !== userId) {
       throw new ForbiddenException('You do not have permission to edit this thread');
     }
-    const updatedMedia = await this.cloudinaryService.uploadImages(media);
+
+    // Lấy danh sách media hiện tại từ DB
+    const currentMediaUrls = thread.media.map(media => media.url);
+    const mediaToDelete = currentMediaUrls.filter(url => !oldMedia?.includes(url));
+
+    // Xóa các media không còn được giữ lại khỏi Cloudinary
+    if (mediaToDelete.length > 0) {
+      await this.cloudinaryService.deleteImages(mediaToDelete);
+    }
+
+    // Xóa các media không còn được giữ lại khỏi thread
+    thread.media = thread.media.filter(m => !mediaToDelete.includes(m.url));
+
+    // Upload các media mới (nếu có)
+    let updatedMedia = thread.media; // Giữ lại media cũ
+    if (media && media.length > 0) {
+      const uploadedMedia = await this.cloudinaryService.uploadImages(media);
+      updatedMedia = [
+        ...updatedMedia.filter(m => oldMedia?.includes(m.url)), // Giữ lại media cũ được giữ lại
+        ...uploadedMedia.map((image: UploadApiResponse) => ({
+          url: image.secure_url,
+          type: 'image' as 'image',
+        })),
+      ];
+    }
+
+    // Cập nhật thread trong DB
     const updatedThread = await this.threadModel.findByIdAndUpdate(
       threadId,
       {
@@ -273,9 +301,12 @@ export class ThreadService {
       },
       { new: true },
     );
+
     if (!updatedThread) {
       throw new NotFoundException('Thread not found');
     }
+
+    // Trả về dữ liệu thread đã cập nhật
     return this.mapToThreadResponseDto(updatedThread, userId);
   }
 
@@ -284,6 +315,19 @@ export class ThreadService {
     if (!thread) {
       throw new NotFoundException('Thread not found');
     }
+    if (thread.user.toString() !== userId) {
+      throw new ForbiddenException('You do not have permission to edit this thread');
+    }
+    const currentMediaUrls = thread.media.map(media => media.url);
+    if (currentMediaUrls.length > 0) {
+      await this.cloudinaryService.deleteImages(currentMediaUrls);
+    }
+
+    await this.threadModel.updateMany(
+      { parentThreadId: new Types.ObjectId(threadId) },
+      { $set: { parentThreadId: null } },
+    );
+
     if (thread.user.toString() !== userId) {
       throw new ForbiddenException('You do not have permission to delete this thread');
     }

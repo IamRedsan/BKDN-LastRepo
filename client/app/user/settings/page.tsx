@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Moon, Sun, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import MainLayout from "@/components/layouts/main-layout";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/components/language-provider";
 import { useUpdateUserSetting } from "@/hooks/api/use-user";
@@ -53,7 +52,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <MainLayout>
+    <div>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">{t("settings")}</h1>
 
@@ -123,6 +122,6 @@ export default function SettingsPage() {
           </Button>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

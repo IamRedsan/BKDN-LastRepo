@@ -85,7 +85,6 @@ export class AuthService {
     res.cookie('accessToken', accessToken, cookieConfig);
     res.cookie('refreshToken', refreshToken, {
       ...cookieConfig,
-      maxAge: parseInt(process.env.COOKIE_MAX_AGE || '604800000'),
     });
 
     return {

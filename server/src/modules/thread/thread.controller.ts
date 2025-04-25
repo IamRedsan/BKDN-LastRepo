@@ -13,6 +13,7 @@ import {
   Body,
   UploadedFiles,
   UseInterceptors,
+  Delete,
 } from '@nestjs/common';
 import { ThreadService } from './thread.service';
 import { RekognitionService } from '../rekognition/rekognition.service';
@@ -46,6 +47,7 @@ export class ThreadController {
   }
 
   @Post('/')
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor('media'))
   async createThread(
     @Req() req: Request,
@@ -63,26 +65,26 @@ export class ThreadController {
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    if (media && media.length > 0) {
-      for (const image of media) {
-        // Resize and compress the image if it exceeds 5 MB
-        let processedBuffer = image.buffer;
-        if (image.buffer.length > 5242880) {
-          processedBuffer = await sharp(image.buffer)
-            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-            .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
-            .toBuffer();
+    // if (media && media.length > 0) {
+    //   for (const image of media) {
+    //     // Resize and compress the image if it exceeds 5 MB
+    //     let processedBuffer = image.buffer;
+    //     if (image.buffer.length > 5242880) {
+    //       processedBuffer = await sharp(image.buffer)
+    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+    //         .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
+    //         .toBuffer();
 
-          console.log('Processed image buffer size:', processedBuffer.length);
-        }
+    //       console.log('Processed image buffer size:', processedBuffer.length);
+    //     }
 
-        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-        if (moderationResult.isToxic) {
-          isToxicImage = true;
-          break;
-        }
-      }
-    }
+    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+    //     if (moderationResult.isToxic) {
+    //       isToxicImage = true;
+    //       break;
+    //     }
+    //   }
+    // }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');
@@ -99,16 +101,16 @@ export class ThreadController {
     );
   }
 
-  @Put('/:threadId')
+  @Put('/')
   @UseInterceptors(FilesInterceptor('media'))
   async editThread(
     @Req() req: Request,
-    @Param('threadId') threadId: string,
+    // @Param('threadId') threadId: string,
     @Body() editThreadDto: ThreadCreateUpdateRequestDto,
     @UploadedFiles() media: Multer.File[],
   ): Promise<ThreadResponseDto> {
-    const { content, visibility } = editThreadDto;
-
+    const { content, visibility, oldMedia, threadId } = editThreadDto;
+    const formattedOldMedia: string[] = JSON.parse(oldMedia);
     if (!content || !visibility) {
       throw new BadRequestException('Content and visibility are required');
     }
@@ -118,28 +120,28 @@ export class ThreadController {
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    if (media && media.length > 0) {
-      for (const image of media) {
-        console.log('Original image buffer size:', image.buffer.length);
+    // if (media && media.length > 0) {
+    //   for (const image of media) {
+    //     console.log('Original image buffer size:', image.buffer.length);
 
-        // Resize and compress the image if it exceeds 5 MB
-        let processedBuffer = image.buffer;
-        if (image.buffer.length > 5242880) {
-          processedBuffer = await sharp(image.buffer)
-            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-            .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
-            .toBuffer();
+    //     // Resize and compress the image if it exceeds 5 MB
+    //     let processedBuffer = image.buffer;
+    //     if (image.buffer.length > 5242880) {
+    //       processedBuffer = await sharp(image.buffer)
+    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+    //         .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
+    //         .toBuffer();
 
-          console.log('Processed image buffer size:', processedBuffer.length);
-        }
+    //       console.log('Processed image buffer size:', processedBuffer.length);
+    //     }
 
-        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-        if (moderationResult.isToxic) {
-          isToxicImage = true;
-          break;
-        }
-      }
-    }
+    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+    //     if (moderationResult.isToxic) {
+    //       isToxicImage = true;
+    //       break;
+    //     }
+    //   }
+    // }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');
@@ -147,6 +149,24 @@ export class ThreadController {
 
     // Edit thread
     const userId = req.user._id; // Assuming `req.user` contains the authenticated user's info
-    return this.threadService.editThread(threadId, userId, censoredContent, visibility, media);
+    return this.threadService.editThread(
+      threadId,
+      userId,
+      censoredContent,
+      visibility,
+      media,
+      formattedOldMedia,
+    );
+  }
+
+  @Delete('/:threadId')
+  @HttpCode(HttpStatus.OK)
+  async deleteThread(
+    @Req() req: Request,
+    @Param('threadId') threadId: string,
+  ): Promise<{ message: string }> {
+    const userId = req.user._id;
+    await this.threadService.deleteThread(threadId, userId);
+    return { message: 'Thread deleted successfully' };
   }
 }

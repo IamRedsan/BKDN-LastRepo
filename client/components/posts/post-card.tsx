@@ -10,11 +10,9 @@ import {
   Heart,
   MessageCircle,
   Repeat,
-  Share2,
   MoreHorizontal,
   Pencil,
   Trash2,
-  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,42 +21,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/components/language-provider";
 import ImageList from "./image-list";
 import { IThread } from "@/interfaces/thread";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
+import { useUserContext } from "@/contexts/userContext";
+import CreatePostDialog from "./create-post-dialog";
+import DeletePostDialog from "./delete-confirm-dialog";
+import { useFormatTime } from "@/utils/myFormatDistanceToNow";
 
 interface PostCardProps {
   post: IThread;
-  onLike: (postId: string) => void;
-  onRepost: (postId: string) => void;
-  isOwnPost?: boolean;
 }
 
-// Mock translations
-const TRANSLATIONS = {
-  "1": "Just launched my new website! Check it out and let me know what you think. (Translated)",
-  "2": "Working on a new project using Next.js and Tailwind CSS. The developer experience is amazing! (Translated)",
-  "3": "Beautiful day for a hike! 🏔️ (Translated)",
-};
-
-export default function PostCard({
-  post,
-  onLike,
-  onRepost,
-  isOwnPost = false,
-}: PostCardProps) {
+export default function PostCard({ post }: PostCardProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked);
   const [isReposted, setIsReposted] = useState(post.isReThreaded);
   const { t } = useLanguage();
   const router = useRouter();
-
-  const formattedDate = formatDistanceToNow(new Date(post.createdAt), {
-    addSuffix: true,
-  });
+  const { user } = useUserContext();
+  const isOwnPost = user?.username === post.user.username;
+  const { formatTimeToNow } = useFormatTime();
+  const formattedDate = formatTimeToNow(new Date(post.createdAt));
 
   // Determine if post is in a different language than current UI
   // const isDifferentLanguage = post.language && post.language !== language;
@@ -68,16 +55,9 @@ export default function PostCard({
     setIsTranslated(!isTranslated);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Handle edit functionality
-    console.log("Edit post", post._id);
-  };
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Handle delete functionality
-    console.log("Delete post", post._id);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleDirectDetail = (e: React.MouseEvent) => {
@@ -118,14 +98,17 @@ export default function PostCard({
                 {" "}
                 · {formattedDate}
               </span>
-              {post.updatedAt && (
+              {post.updatedAt !== post.createdAt && (
                 <span className="text-muted-foreground text-xs">
                   {" "}
                   ({t("edit")})
                 </span>
               )}
             </div>
-            <DropdownMenu>
+            <DropdownMenu
+              open={isDropdownOpen}
+              onOpenChange={setIsDropdownOpen}
+            >
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <MoreHorizontal size={18} />
@@ -144,10 +127,23 @@ export default function PostCard({
                 <DropdownMenuItem>{t("reportContent")}</DropdownMenuItem>
                 {isOwnPost && (
                   <>
-                    <DropdownMenuItem onClick={handleEdit}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      {t("edit")}
-                    </DropdownMenuItem>
+                    <CreatePostDialog
+                      key={post._id}
+                      trigger={
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault(); // Ngăn dropdown tự động đóng
+                          }}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          {t("edit")}
+                        </DropdownMenuItem>
+                      }
+                      initialThread={post}
+                      isEditing={true}
+                      setIsDropdownOpen={setIsDropdownOpen}
+                    />
+
                     <DropdownMenuItem
                       onClick={handleDelete}
                       className="text-destructive"
@@ -223,7 +219,7 @@ export default function PostCard({
               variant="ghost"
               size="sm"
               className="flex items-center space-x-1"
-              // onClick={handlePostClick}
+              onClick={handleDirectDetail}
             >
               <MessageCircle size={18} />
               <span>{post.commentNum}</span>
@@ -245,6 +241,12 @@ export default function PostCard({
           </div>
         </div>
       </div>
+      {/* Delete confirmation dialog */}
+      <DeletePostDialog
+        thread={post}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
     </div>
   );
 }

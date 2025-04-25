@@ -27,14 +27,7 @@ export class CloudinaryService {
       throw new Error('Invalid image URL. Could not extract public_id.');
     }
 
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader.destroy(publicId, (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result);
-      });
-    });
+    return cloudinary.uploader.destroy(publicId); // Promise-based
   }
 
   async deleteImages(imageUrls: string[]): Promise<any[]> {
