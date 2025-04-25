@@ -4,6 +4,7 @@ import { client } from "@/shared/axiosClient";
 import { IThread } from "@/interfaces/thread";
 import { Visibility } from "@/enums/ThreadEnum";
 import { queryClient } from "@/shared/queryClient";
+import { useUserContext } from "@/contexts/userContext";
 
 interface ThreadResponse {
   parentThread: IThread | null;
@@ -28,9 +29,11 @@ interface ThreadCreateUpdateRequest {
   content: string;
   visibility: Visibility;
   media: File[];
+  oldMedia?: string[];
 }
 
 export const useCreateThread = () => {
+  const { user } = useUserContext();
   return useMutation<IThread, AxiosError, ThreadCreateUpdateRequest>({
     mutationFn: async (payload: ThreadCreateUpdateRequest) => {
       const formData = new FormData();
@@ -57,25 +60,29 @@ export const useCreateThread = () => {
       queryClient.invalidateQueries({
         queryKey: ["threadDetail", variables.threadId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["userProfile", user!.username],
+      });
     },
   });
 };
 
 export const useUpdateThread = () => {
+  const { user } = useUserContext();
   return useMutation<IThread, AxiosError, ThreadCreateUpdateRequest>({
     mutationFn: async (payload: ThreadCreateUpdateRequest) => {
       const formData = new FormData();
-      formData.append("threadID", payload.threadId!);
+      formData.append("threadId", payload.threadId!);
       formData.append("content", payload.content);
       formData.append("visibility", payload.visibility);
-      if (payload.parentThreadId) {
-        formData.append("parentThreadId", payload.parentThreadId);
+      if (payload.oldMedia) {
+        formData.append("oldMedia", JSON.stringify(payload.oldMedia));
       }
       if (payload.media) {
         payload.media.forEach((file) => formData.append("media", file));
       }
 
-      const response = await client.patch("/thread/update", formData, {
+      const response = await client.put("/thread", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
@@ -88,6 +95,27 @@ export const useUpdateThread = () => {
       }
       queryClient.invalidateQueries({
         queryKey: ["threadDetail", variables.threadId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userProfile", user!.username],
+      });
+    },
+  });
+};
+
+export const useDeleteThread = () => {
+  const { user } = useUserContext();
+  return useMutation<IThread, AxiosError, string>({
+    mutationFn: async (threadId: string) => {
+      const response = await client.delete(`/thread/${threadId}`);
+      return response.data;
+    },
+    onSuccess: (_, threadId) => {
+      queryClient.invalidateQueries({
+        queryKey: ["threadDetail", threadId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userProfile", user!.username],
       });
     },
   });

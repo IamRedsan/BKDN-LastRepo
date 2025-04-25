@@ -6,5 +6,5 @@ export class ThreadCreateUpdateRequestDto {
   parentThreadId?: string | null;
   content: string;
   visibility: Visibility;
-  media: Multer.File[];
+  oldMedia?: string;
 }

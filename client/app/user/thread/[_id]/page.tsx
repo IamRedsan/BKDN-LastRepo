@@ -47,7 +47,7 @@ export default function ThreadDetailPage() {
     isLoading: isLoadingData,
     isError,
   } = useGetThreadDetail(threadId);
-  const { mutate: createThread, isLoading: isCreating } = useCreateThread();
+  const { mutate: createThread, isPending: isCreating } = useCreateThread();
 
   const handleLike = () => {
     setThread((prev) => ({
@@ -236,132 +236,7 @@ export default function ThreadDetailPage() {
           )}
 
           {/* Current Thread */}
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <div className="flex items-start space-x-4">
-              <Link href={`/user/profile/${thread!.user.username}`}>
-                <Image
-                  src={thread!.user.avatar || "/placeholder.svg"}
-                  alt={thread!.user.name}
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                />
-              </Link>
-              <div className="flex-1 space-y-2">
-                <div>
-                  <div className="flex items-center">
-                    <Link
-                      href={`/user/profile/${thread!.user.username}`}
-                      className="font-medium hover:underline"
-                    >
-                      {thread!.user.name}
-                    </Link>
-                    <span className="text-muted-foreground ml-1">
-                      @{thread!.user.username}
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <p className="mt-2">
-                      {
-                        // isTranslated
-                        //   ? TRANSLATIONS[
-                        //       thread.id as keyof typeof TRANSLATIONS
-                        //     ] || thread.content
-                        //   :
-                        thread!.content
-                      }
-                    </p>
-
-                    {/* {isDifferentLanguage && !isTranslated && (
-                      <button
-                        onClick={handleTranslate}
-                        className="mt-1 flex items-center text-xs text-primary hover:underline"
-                      >
-                        {t('translate')}
-                      </button>
-                    )} */}
-
-                    {/* {isTranslated && (
-                      <button
-                        onClick={handleTranslate}
-                        className="mt-1 flex items-center text-xs text-primary hover:underline"
-                      >
-                        Show original
-                      </button>
-                    )} */}
-                  </div>
-                </div>
-
-                {thread!.media && thread!.media.length > 0 && (
-                  <div className="mt-2 overflow-x-auto pb-2">
-                    <div className="flex gap-2 w-max">
-                      {thread!.media.map((image: IMedia, index: number) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square w-60 h-60 flex-shrink-0 overflow-hidden rounded-md"
-                        >
-                          <Image
-                            src={image.url || "/placeholder.svg"}
-                            alt={`Post image ${index + 1}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(thread!.createdAt), {
-                    addSuffix: true,
-                  })}
-                  {thread!.updatedAt && <span> · {t("edit")}</span>}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center space-x-4 pt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`flex items-center space-x-1 ${
-                      thread.isLiked ? "text-red-500" : ""
-                    }`}
-                    onClick={handleLike}
-                  >
-                    <Heart
-                      size={18}
-                      className={thread.isLiked ? "fill-red-500" : ""}
-                    />
-                    <span>{thread.reactionNum}</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center space-x-1"
-                    onClick={handlePostClick}
-                  >
-                    <MessageCircle size={18} />
-                    <span>{comments.length}</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`flex items-center space-x-1 ${
-                      thread.isReThreaded ? "text-green-500" : ""
-                    }`}
-                    onClick={handleRepost}
-                  >
-                    <Repeat
-                      size={18}
-                      className={thread.isReThreaded ? "fill-green-500" : ""}
-                    />
-                    <span>{thread.sharedNum}</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PostCard post={thread} />
 
           <Separator />
 
@@ -437,15 +312,7 @@ export default function ThreadDetailPage() {
             ) : (
               <div className="space-y-4 mt-4">
                 {comments.map((comment) => (
-                  <PostCard
-                    key={comment._id}
-                    post={comment}
-                    // onLike={handleLike}
-                    // onRepost={handleRepost}
-                    onLike={() => {}}
-                    onRepost={() => {}}
-                    isOwnPost={false}
-                  />
+                  <PostCard key={comment._id} post={comment} />
                 ))}
               </div>
             )}

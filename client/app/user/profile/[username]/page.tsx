@@ -21,6 +21,7 @@ import { setReThreads } from "@/store/profile-rethread-slice";
 
 export default function ProfilePage() {
   const { username } = useParams();
+  const [callAPI, setCallAPI] = useState(false);
   const { user } = useUserContext();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<IUser | null>(() => {
@@ -99,7 +100,7 @@ export default function ProfilePage() {
       if (data.user.username === user?.username) {
         setIsMyProfile(true);
       }
-      setProfile(data.user); // Update profile
+      setProfile(data.user);
       dispatch(setThreads(data.threads));
       dispatch(setReThreads(data.reThreads));
     }
@@ -191,30 +192,40 @@ export default function ProfilePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="posts" className="space-y-4 mt-4">
-            {posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                // onLike={handleLike}
-                // onRepost={handleRepost}
-                onLike={() => {}}
-                onRepost={() => {}}
-                isOwnPost={true}
-              />
-            ))}
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  // onLike={handleLike}
+                  // onRepost={handleRepost}
+                  // onLike={() => {}}
+                  // onRepost={() => {}}
+                />
+              ))
+            ) : (
+              <p className="flex flex-1 items-center justify-center mt-4">
+                {t("noPosts")}
+              </p>
+            )}
           </TabsContent>
           <TabsContent value="reposts" className="space-y-4 mt-4">
-            {reposts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                // onLike={handleLike}
-                // onRepost={handleRepost}
-                onLike={() => {}}
-                onRepost={() => {}}
-                isOwnPost={false}
-              />
-            ))}
+            {reposts.length > 0 ? (
+              reposts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  // onLike={handleLike}
+                  // onRepost={handleRepost}
+                  // onLike={() => {}}
+                  // onRepost={() => {}}
+                />
+              ))
+            ) : (
+              <p className="flex flex-1 items-center justify-center mt-4">
+                {t("noReposts")}
+              </p>
+            )}
           </TabsContent>
         </Tabs>
       </div>

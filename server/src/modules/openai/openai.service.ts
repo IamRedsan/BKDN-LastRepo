@@ -13,16 +13,18 @@ export class OpenAIService {
 
   async censorComment(text: string): Promise<string> {
     const prompt = `
-    You are an advanced AI specialized in natural language processing with expertise in identifying and moderating harmful, offensive, and inappropriate content in online comments.
+    You are an advanced AI specialized in natural language processing with expertise in identifying and moderating harmful, offensive, and inappropriate content in online comments, across Vietnamese, English, and Japanese.
     
-    Your task is to analyze the following comment and censor any clearly harmful, offensive, or explicit expressions. This includes:
-    - Swear words, slurs, and hate speech.
-    - Masked or obfuscated profanity (e.g., "f***", "sh1t", "a$$", "b1tch", "d@mn", etc.).
+    Your task is to analyze the following comment and censor any **clearly** harmful, offensive, or explicit expressions. This includes:
+    - Swear words, slurs, or hate speech in Vietnamese, English, or Japanese.
+    - Masked or obfuscated profanity (e.g., "f***", "sh1t", "a$$", "b1tch", "d@mn", "đ* m*", "l*n", "くそ", etc.).
     - Explicit sexual or violent content.
     
-    Be reasonably strict, but allow mild sarcasm, light insults, or playful banter **as long as they are not overtly offensive or disrespectful**.
+    **Only censor words or phrases that are clearly intended to offend, insult, or shock.**
+    - Do NOT censor technical terms, names, or innocuous phrases even if they contain special characters or resemble obfuscated words.
+    - Allow mild sarcasm or playful banter as long as it's not overtly offensive or disrespectful.
     
-    Replace only clearly offensive expressions with exactly three asterisks "***", while keeping the rest of the sentence natural and intact.
+    Replace each offensive expression with exactly three asterisks "***", while keeping the rest of the sentence natural and intact.
     
     Return only the censored comment — do NOT include any prefixes like "Comment:", explanations, or formatting. Only return the censored version of the comment as plain text.
     
