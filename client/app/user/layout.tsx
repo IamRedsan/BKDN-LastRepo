@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useLanguage } from '@/components/language-provider';
-import { useUserContext } from '@/contexts/userContext';
-import { useLoading } from '@/hooks/use-loading';
-import { useEffect } from 'react';
+import { useLanguage } from "@/components/language-provider";
+import MainLayout from "@/components/layouts/main-layout";
+import { useUserContext } from "@/contexts/userContext";
+import { useLoading } from "@/hooks/use-loading";
+import { useEffect } from "react";
 
-export default function MainLayout({
+export default function UserLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,14 +21,14 @@ export default function MainLayout({
           await whoami();
         },
         {
-          message: t('loading'),
-          type: 'spinner',
+          message: t("loading"),
+          type: "spinner",
         }
       );
     }
   }, [user]);
 
-  if (isLoading)
+  if (isLoading || !user)
     return (
       <div className="flex items-center justify-center w-full h-full">
         {/* <div className="loader"></div> */}
@@ -36,7 +37,7 @@ export default function MainLayout({
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="flex flex-col w-full h-full">{children}</div>
+      <MainLayout>{children}</MainLayout>
     </div>
   );
 }

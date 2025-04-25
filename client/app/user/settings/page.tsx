@@ -1,20 +1,21 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Moon, Sun, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import MainLayout from '@/components/layouts/main-layout';
-import { useTheme } from '@/components/theme-provider';
-import { useLanguage } from '@/components/language-provider';
-import { useUpdateUserSetting } from '@/hooks/use-user';
-import { Language } from '@/enums/Language';
-import { Theme } from '@/enums/Theme';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Moon, Sun, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import MainLayout from "@/components/layouts/main-layout";
+import { useTheme } from "@/components/theme-provider";
+import { useLanguage } from "@/components/language-provider";
+import { useUpdateUserSetting } from "@/hooks/api/use-user";
+import { Language } from "@/enums/Language";
+import { Theme } from "@/enums/Theme";
+import { useToast } from "@/hooks/use-toast";
+import { useUserContext } from "@/contexts/userContext";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const { mutate: updateUserSetting } = useUpdateUserSetting();
   const { toast } = useToast();
+  const { user } = useUserContext();
 
   const handleSave = () => {
     setLoading(true);
@@ -35,14 +37,14 @@ export default function SettingsPage() {
       {
         onSuccess: () => {
           toast({
-            title: t('success'),
-            description: t('settingUpdated'),
+            title: t("success"),
+            description: t("settingUpdated"),
           });
           setLoading(false);
         },
         onError: () => {
           toast({
-            title: t('error'),
+            title: t("error"),
           });
           setLoading(false);
         },
@@ -53,11 +55,11 @@ export default function SettingsPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{t('settings')}</h1>
+        <h1 className="text-2xl font-bold">{t("settings")}</h1>
 
         <div className="space-y-6">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">{t('language')}</h2>
+            <h2 className="text-xl font-semibold">{t("language")}</h2>
             <RadioGroup
               value={language}
               onValueChange={(value) => setLanguage(value as Language)}
@@ -90,7 +92,7 @@ export default function SettingsPage() {
           <Separator />
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">{t('darkMode')}</h2>
+            <h2 className="text-xl font-semibold">{t("darkMode")}</h2>
             <div className="flex items-center space-x-4">
               <Sun className="h-5 w-5" />
               <Switch
@@ -104,18 +106,20 @@ export default function SettingsPage() {
           </div>
 
           <Separator />
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">{t('changePassword')}</h2>
-            <Button onClick={() => router.push('/user/change-password')}>
-              {t('changePassword')}
-            </Button>
-          </div>
-
-          <Separator />
+          {user?.havePassword && (
+            <>
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">{t("changePassword")}</h2>
+                <Button onClick={() => router.push("/user/change-password")}>
+                  {t("changePassword")}
+                </Button>
+              </div>
+              <Separator />
+            </>
+          )}
 
           <Button onClick={handleSave} disabled={loading}>
-            {loading ? t('saving') : t('save')}
+            {loading ? t("saving") : t("save")}
           </Button>
         </div>
       </div>

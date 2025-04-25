@@ -26,8 +26,9 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       // Loại bỏ password trước khi gán vào request
-      const { password, ...userWithoutPassword } = user;
-      req['user'] = userWithoutPassword;
+      const { password, _id, ...userWithoutPassword } = user;
+      const userFormat = { ...userWithoutPassword, _id: _id.toString() };
+      req['user'] = userFormat;
 
       next();
     } catch (e) {

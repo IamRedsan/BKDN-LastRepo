@@ -1,3 +1,4 @@
+import { Profile } from 'passport-google-oauth20';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
@@ -8,6 +9,12 @@ import { EmailModule } from './modules/email/email.module';
 import config from './config';
 import { DB_CONFIG, JWT_CONFIG } from './common/constant/register-name-config';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { OpenAIModule } from './modules/openai/openai.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { OpenAIService } from './modules/openai/openai.service';
+import { RekognitionModule } from './modules/rekognition/rekognition.module';
 
 @Module({
   imports: [
@@ -43,6 +50,11 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     AuthModule,
     UserModule,
     EmailModule,
+    ProfileModule,
+    OpenAIModule,
+    RekognitionModule,
   ],
+  controllers: [AppController],
+  providers: [AppService, OpenAIService],
 })
 export class AppModule {}
