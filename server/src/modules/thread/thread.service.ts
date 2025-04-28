@@ -127,7 +127,7 @@ export class ThreadService {
         },
       })
       .exec();
-
+    console.log(mainThread);
     if (!mainThread) {
       throw new NotFoundException('Thread not found');
     }
@@ -137,7 +137,10 @@ export class ThreadService {
     if (!currentUser) {
       throw new BadRequestException('Current user not found');
     }
-    if (mainThread.visibility === Visibility.FOLLOWER_ONLY) {
+    if (
+      mainThread.visibility === Visibility.FOLLOWER_ONLY &&
+      mainThread.user._id.toString() !== currentUser._id.toString()
+    ) {
       const isFollower = mainThread.user.followers?.some(
         (follower: any) => follower._id.toString() === currentUser._id.toString(),
       );
@@ -217,7 +220,7 @@ export class ThreadService {
       parentThreadId: parrentThreadId ? new Types.ObjectId(parrentThreadId) : null,
       user: new Types.ObjectId(userId),
       content,
-      visibility,
+      visibility: parrentThreadId ? Visibility.PUBLIC : visibility,
       media: formattedUploadedMedia,
     });
 

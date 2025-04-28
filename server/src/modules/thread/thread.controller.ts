@@ -65,26 +65,26 @@ export class ThreadController {
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    // if (media && media.length > 0) {
-    //   for (const image of media) {
-    //     // Resize and compress the image if it exceeds 5 MB
-    //     let processedBuffer = image.buffer;
-    //     if (image.buffer.length > 5242880) {
-    //       processedBuffer = await sharp(image.buffer)
-    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-    //         .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
-    //         .toBuffer();
+    if (media && media.length > 0) {
+      for (const image of media) {
+        // Resize and compress the image if it exceeds 5 MB
+        let processedBuffer = image.buffer;
+        if (image.buffer.length > 5242880) {
+          processedBuffer = await sharp(image.buffer)
+            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+            .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
+            .toBuffer();
 
-    //       console.log('Processed image buffer size:', processedBuffer.length);
-    //     }
+          console.log('Processed image buffer size:', processedBuffer.length);
+        }
 
-    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-    //     if (moderationResult.isToxic) {
-    //       isToxicImage = true;
-    //       break;
-    //     }
-    //   }
-    // }
+        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+        if (moderationResult.isToxic) {
+          isToxicImage = true;
+          break;
+        }
+      }
+    }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');
@@ -120,28 +120,28 @@ export class ThreadController {
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    // if (media && media.length > 0) {
-    //   for (const image of media) {
-    //     console.log('Original image buffer size:', image.buffer.length);
+    if (media && media.length > 0) {
+      for (const image of media) {
+        console.log('Original image buffer size:', image.buffer.length);
 
-    //     // Resize and compress the image if it exceeds 5 MB
-    //     let processedBuffer = image.buffer;
-    //     if (image.buffer.length > 5242880) {
-    //       processedBuffer = await sharp(image.buffer)
-    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-    //         .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
-    //         .toBuffer();
+        // Resize and compress the image if it exceeds 5 MB
+        let processedBuffer = image.buffer;
+        if (image.buffer.length > 5242880) {
+          processedBuffer = await sharp(image.buffer)
+            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+            .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
+            .toBuffer();
 
-    //       console.log('Processed image buffer size:', processedBuffer.length);
-    //     }
+          console.log('Processed image buffer size:', processedBuffer.length);
+        }
 
-    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-    //     if (moderationResult.isToxic) {
-    //       isToxicImage = true;
-    //       break;
-    //     }
-    //   }
-    // }
+        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+        if (moderationResult.isToxic) {
+          isToxicImage = true;
+          break;
+        }
+      }
+    }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');

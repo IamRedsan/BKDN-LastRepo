@@ -11,6 +11,7 @@ import { WhoamiResponseDto } from './dto/response/whoami-response.dto';
 import { UpdateUserSettingRequestDto } from './dto/request/update-setting-request.dto';
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
 import * as bcrypt from 'bcryptjs';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class UserService {
@@ -213,5 +214,25 @@ export class UserService {
     user.password = hashedNewPassword;
     await user.save();
     return true;
+  }
+
+  private clients = new Map<string, Set<Socket>>();
+
+  // Lưu trữ kết nối của người dùng
+  addClient(username: string, socket: Socket) {
+    if (!this.clients.has(username)) {
+      this.clients.set(username, new Set());
+    }
+    this.clients.get(username)?.add(socket);
+  }
+
+  // Xóa kết nối của người dùng
+  removeClient(username: string, socket: Socket) {
+    this.clients.get(username)?.delete(socket);
+  }
+
+  // Lấy tất cả các client đang kết nối của người dùng
+  getClientsForUser(username: string): Socket[] {
+    return Array.from(this.clients.get(username) || []);
   }
 }

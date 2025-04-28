@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useLanguage } from "@/components/language-provider";
-import MainLayout from "@/components/layouts/main-layout";
-import { useUserContext } from "@/contexts/userContext";
-import { useLoading } from "@/hooks/use-loading";
-import { useEffect } from "react";
+import { useLanguage } from '@/components/language-provider';
+import MainLayout from '@/components/layouts/main-layout';
+import { useUserContext } from '@/contexts/userContext';
+import { useLoading } from '@/hooks/use-loading';
+import { useEffect } from 'react';
 
 export default function UserLayout({
   children,
@@ -21,8 +21,8 @@ export default function UserLayout({
           await whoami();
         },
         {
-          message: t("loading"),
-          type: "spinner",
+          message: t('loading'),
+          type: 'spinner',
         }
       );
     }
