@@ -1,77 +1,78 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { Heart, MessageCircle, Repeat, AlertTriangle } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MainLayout from "@/components/layouts/main-layout";
-import { useLanguage } from "@/components/language-provider";
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import { Heart, MessageCircle, Repeat, AlertTriangle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MainLayout from '@/components/layouts/main-layout';
+import { useLanguage } from '@/components/language-provider';
+import { useNotification } from '@/contexts/notifContext';
 
 // Mock notifications data
 const MOCK_NOTIFICATIONS = [
   {
-    id: "n1",
-    type: "like",
+    id: 'n1',
+    type: 'like',
     user: {
-      id: "user2",
-      name: "John Doe",
-      username: "johndoe",
-      avatar: "/placeholder.svg?height=40&width=40",
+      id: 'user2',
+      name: 'John Doe',
+      username: 'johndoe',
+      avatar: '/placeholder.svg?height=40&width=40',
     },
     post: {
-      id: "1",
+      id: '1',
       content:
-        "Just launched my new website! Check it out and let me know what you think.",
+        'Just launched my new website! Check it out and let me know what you think.',
     },
-    createdAt: "2023-05-15T11:30:00Z",
+    createdAt: '2023-05-15T11:30:00Z',
     isRead: false,
   },
   {
-    id: "n2",
-    type: "comment",
+    id: 'n2',
+    type: 'comment',
     user: {
-      id: "user3",
-      name: "Alex Johnson",
-      username: "alexj",
-      avatar: "/placeholder.svg?height=40&width=40",
+      id: 'user3',
+      name: 'Alex Johnson',
+      username: 'alexj',
+      avatar: '/placeholder.svg?height=40&width=40',
     },
     post: {
-      id: "1",
+      id: '1',
       content:
-        "Just launched my new website! Check it out and let me know what you think.",
+        'Just launched my new website! Check it out and let me know what you think.',
     },
-    comment: "This is amazing! Congrats on the launch.",
-    createdAt: "2023-05-15T12:15:00Z",
+    comment: 'This is amazing! Congrats on the launch.',
+    createdAt: '2023-05-15T12:15:00Z',
     isRead: true,
   },
   {
-    id: "n3",
-    type: "repost",
+    id: 'n3',
+    type: 'repost',
     user: {
-      id: "user4",
-      name: "Sarah Williams",
-      username: "sarahw",
-      avatar: "/placeholder.svg?height=40&width=40",
+      id: 'user4',
+      name: 'Sarah Williams',
+      username: 'sarahw',
+      avatar: '/placeholder.svg?height=40&width=40',
     },
     post: {
-      id: "2",
+      id: '2',
       content:
-        "Working on a new project using Next.js and Tailwind CSS. The developer experience is amazing!",
+        'Working on a new project using Next.js and Tailwind CSS. The developer experience is amazing!',
     },
-    createdAt: "2023-05-14T16:30:00Z",
+    createdAt: '2023-05-14T16:30:00Z',
     isRead: false,
   },
   {
-    id: "n4",
-    type: "violation",
+    id: 'n4',
+    type: 'violation',
     post: {
-      id: "3",
+      id: '3',
       content:
-        "This post contains content that violates our community guidelines.",
+        'This post contains content that violates our community guidelines.',
     },
-    createdAt: "2023-05-13T10:00:00Z",
+    createdAt: '2023-05-13T10:00:00Z',
     isRead: false,
   },
 ];
@@ -79,6 +80,8 @@ const MOCK_NOTIFICATIONS = [
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const { t } = useLanguage();
+  const { notifications: notifs } = useNotification();
+  console.log('notifs', notifs);
 
   const markAllAsRead = () => {
     setNotifications(
@@ -91,13 +94,13 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "like":
+      case 'like':
         return <Heart className="h-5 w-5 text-red-500" />;
-      case "comment":
+      case 'comment':
         return <MessageCircle className="h-5 w-5 text-blue-500" />;
-      case "repost":
+      case 'repost':
         return <Repeat className="h-5 w-5 text-green-500" />;
-      case "violation":
+      case 'violation':
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       default:
         return null;
@@ -106,7 +109,7 @@ export default function NotificationsPage() {
 
   const getNotificationText = (notification: any) => {
     switch (notification.type) {
-      case "like":
+      case 'like':
         return (
           <>
             <Link
@@ -115,10 +118,10 @@ export default function NotificationsPage() {
             >
               {notification.user.name}
             </Link>
-            {" liked your post"}
+            {' liked your post'}
           </>
         );
-      case "comment":
+      case 'comment':
         return (
           <>
             <Link
@@ -127,13 +130,13 @@ export default function NotificationsPage() {
             >
               {notification.user.name}
             </Link>
-            {" commented on your post: "}
+            {' commented on your post: '}
             <span className="text-muted-foreground">
               "{notification.comment}"
             </span>
           </>
         );
-      case "repost":
+      case 'repost':
         return (
           <>
             <Link
@@ -142,11 +145,11 @@ export default function NotificationsPage() {
             >
               {notification.user.name}
             </Link>
-            {" reposted your post"}
+            {' reposted your post'}
           </>
         );
-      case "violation":
-        return "Your post has been flagged for violating our community guidelines";
+      case 'violation':
+        return 'Your post has been flagged for violating our community guidelines';
       default:
         return null;
     }
@@ -156,7 +159,7 @@ export default function NotificationsPage() {
     <div>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("notifications")}</h1>
+          <h1 className="text-2xl font-bold">{t('notifications')}</h1>
           <button
             onClick={markAllAsRead}
             className="text-sm text-primary hover:underline"
@@ -185,14 +188,14 @@ export default function NotificationsPage() {
                 <div
                   key={notification.id}
                   className={`flex items-start space-x-4 rounded-lg border p-4 ${
-                    !notification.isRead ? "bg-accent" : ""
+                    !notification.isRead ? 'bg-accent' : ''
                   }`}
                 >
                   <div className="mt-1">
-                    {notification.type !== "violation" ? (
+                    {notification.type !== 'violation' ? (
                       <Link href={`/profile/${notification.user.username}`}>
                         <Image
-                          src={notification.user.avatar || "/placeholder.svg"}
+                          src={notification.user.avatar || '/placeholder.svg'}
                           alt={notification.user.name}
                           width={40}
                           height={40}

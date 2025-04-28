@@ -1,4 +1,3 @@
-import { Profile } from 'passport-google-oauth20';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
@@ -15,6 +14,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OpenAIService } from './modules/openai/openai.service';
 import { RekognitionModule } from './modules/rekognition/rekognition.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -53,6 +53,7 @@ import { RekognitionModule } from './modules/rekognition/rekognition.module';
     ProfileModule,
     OpenAIModule,
     RekognitionModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, OpenAIService],

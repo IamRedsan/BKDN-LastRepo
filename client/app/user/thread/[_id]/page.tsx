@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Camera, Heart, MessageCircle, Repeat } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PostSkeleton } from "@/components/loading/post-skeleton";
-import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
-import { useLanguage } from "@/components/language-provider";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import Link from "next/link";
-import { IMedia, IThread } from "@/interfaces/thread";
-import { useGetThreadDetail, useCreateThread } from "@/hooks/api/use-thread";
-import { useUserContext } from "@/contexts/userContext";
-import ImageList from "@/components/posts/image-list";
-import { useToast } from "@/hooks/use-toast";
-import { Visibility } from "@/enums/ThreadEnum";
-import PostCard from "@/components/posts/post-card";
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, Camera, Heart, MessageCircle, Repeat } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { PostSkeleton } from '@/components/loading/post-skeleton';
+import Image from 'next/image';
+import { formatDistanceToNow } from 'date-fns';
+import { useLanguage } from '@/components/language-provider';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import Link from 'next/link';
+import { IMedia, IThread } from '@/interfaces/thread';
+import { useGetThreadDetail, useCreateThread } from '@/hooks/api/use-thread';
+import { useUserContext } from '@/contexts/userContext';
+import ImageList from '@/components/posts/image-list';
+import { useToast } from '@/hooks/use-toast';
+import { Visibility } from '@/enums/ThreadEnum';
+import PostCard from '@/components/posts/post-card';
 
 // Mock translations
 const TRANSLATIONS = {
-  "1": "Just launched my new website! Check it out and let me know what you think. (Translated)",
-  "2": "Working on a new project using Next.js and Tailwind CSS. The developer experience is amazing! (Translated)",
-  "3": "Beautiful day for a hike! 🏔️ (Translated)",
+  '1': 'Just launched my new website! Check it out and let me know what you think. (Translated)',
+  '2': 'Working on a new project using Next.js and Tailwind CSS. The developer experience is amazing! (Translated)',
+  '3': 'Beautiful day for a hike! 🏔️ (Translated)',
 };
 
 export default function ThreadDetailPage() {
@@ -38,7 +38,7 @@ export default function ThreadDetailPage() {
   const [parentThread, setParentThread] = useState<IThread | null>(null);
   const [comments, setComments] = useState<IThread[]>([]);
   const [images, setImages] = useState<(File | { url: string })[]>([]);
-  const [commentText, setCommentText] = useState("");
+  const [commentText, setCommentText] = useState('');
   const [isTranslated, setIsTranslated] = useState(false);
   const commentAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,16 +89,16 @@ export default function ThreadDetailPage() {
     }
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
   const handleAddComment = () => {
     if (!commentText.trim() && images.length === 0) {
       toast({
-        title: t("error"),
-        description: t("comment_empty"),
-        variant: "destructive",
+        title: t('error'),
+        description: t('comment_empty'),
+        variant: 'destructive',
       });
       return;
     }
@@ -113,19 +113,19 @@ export default function ThreadDetailPage() {
       {
         onSuccess: (newComment) => {
           setComments((prev) => [newComment, ...prev]);
-          setCommentText("");
+          setCommentText('');
           setImages([]);
           toast({
-            title: t("success"),
-            description: t("comment_created"),
-            variant: "default",
+            title: t('success'),
+            description: t('comment_created'),
+            variant: 'default',
           });
         },
         onError: () => {
           toast({
-            title: t("error"),
-            description: t("comment_create_failed"),
-            variant: "destructive",
+            title: t('error'),
+            description: t('comment_create_failed'),
+            variant: 'destructive',
           });
         },
       }
@@ -166,12 +166,12 @@ export default function ThreadDetailPage() {
     return (
       <div>
         <div className="flex flex-col items-center justify-center py-12">
-          <h1 className="text-2xl font-bold">{t("threadNotFound")}</h1>
+          <h1 className="text-2xl font-bold">{t('threadNotFound')}</h1>
           <p className="text-muted-foreground mt-2">
-            {t("threadNotFoundDescription")}
+            {t('threadNotFoundDescription')}
           </p>
           <Button onClick={handleGoBack} className="mt-6">
-            {t("goBack")}
+            {t('goBack')}
           </Button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function ThreadDetailPage() {
           >
             <ArrowLeft size={20} />
           </Button>
-          <h1 className="text-2xl font-bold">Thread</h1>
+          <h1 className="text-2xl font-bold">{t('threadDetail')}</h1>
         </div>
 
         <div className="space-y-6">
@@ -203,7 +203,7 @@ export default function ThreadDetailPage() {
               <div className="flex items-start space-x-4">
                 <Link href={`/user/profile/${parentThread.user.username}`}>
                   <Image
-                    src={parentThread.user.avatar || "/placeholder.svg"}
+                    src={parentThread.user.avatar || '/placeholder.svg'}
                     alt={parentThread.user.name}
                     width={40}
                     height={40}
@@ -255,7 +255,7 @@ export default function ThreadDetailPage() {
             )}
             <div className="flex items-start space-x-4">
               <Image
-                src={user?.avatar ?? "/placeholder.svg?height=40&width=40"}
+                src={user?.avatar ?? '/placeholder.svg?height=40&width=40'}
                 alt="Current user"
                 width={40}
                 height={40}
@@ -264,7 +264,7 @@ export default function ThreadDetailPage() {
               <div className="flex-1 space-y-2">
                 <Textarea
                   ref={commentAreaRef}
-                  placeholder={`${t("comment")}...`}
+                  placeholder={`${t('comment')}...`}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   className="resize-none"
@@ -292,7 +292,7 @@ export default function ThreadDetailPage() {
                       isCreating || (!commentText.trim() && images.length === 0)
                     }
                   >
-                    {isCreating ? t("posting") : t("post")}
+                    {isCreating ? t('posting') : t('post')}
                   </Button>
                 </div>
               </div>
@@ -302,12 +302,12 @@ export default function ThreadDetailPage() {
           {/* Comments */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">
-              {t("comment")} ({comments.length})
+              {t('comment')} ({comments.length})
             </h2>
 
             {comments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <p>{t("no_comment_yet")}</p>
+                <p>{t('no_comment_yet')}</p>
               </div>
             ) : (
               <div className="space-y-4 mt-4">
