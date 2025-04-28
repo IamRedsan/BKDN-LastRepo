@@ -5,7 +5,7 @@ import { Notification } from 'src/common/schemas/notification.schema';
 import { NotificationGateway } from './notification.gateway';
 import { NotificationContentEnum, NotificationTypeEnum } from 'src/common/enums/notification.enum';
 import { UserService } from '../user/user.service';
-import { NotificationResponseDto } from './dto/notification.response';
+import { NotificationResponseDto } from './dto/response/notification.response';
 
 @Injectable()
 export class NotificationService {
@@ -13,7 +13,7 @@ export class NotificationService {
     @InjectModel(Notification.name)
     private notificationModel: Model<Notification>,
     private notificationGateway: NotificationGateway,
-    private readonly userService: UserService, // Assuming you have a UserService to get user details
+    private readonly userService: UserService,
   ) {}
 
   async createNotification(data: {
@@ -41,7 +41,6 @@ export class NotificationService {
 
     await notification.save();
 
-    // Gửi thông báo qua socket
     this.notificationGateway.sendNotification(data.receiverUsername, {
       _id: notification._id.toString(),
       sender: {
@@ -57,11 +56,9 @@ export class NotificationService {
     userId: string,
     page: number = 1,
     limit: number = 10,
-    skip: number = 0, // Thêm tham số skip
+    skip: number = 0,
   ): Promise<NotificationResponseDto[]> {
-    const calculatedSkip: number = skip + (page - 1) * limit; // Tính toán số lượng cần bỏ qua
-    console.log('calculatedSkip', calculatedSkip);
-
+    const calculatedSkip: number = skip + (page - 1) * limit;
     const rawNotifications: any = await this.notificationModel
       .find({ receiverId: new Types.ObjectId(userId) })
       .populate({
@@ -73,11 +70,9 @@ export class NotificationService {
         select: '_id content',
       })
       .sort({ createdAt: -1 })
-      .skip(calculatedSkip) // Áp dụng skip
+      .skip(calculatedSkip)
       .limit(limit)
       .lean();
-
-    console.log('rawNotifications', rawNotifications);
 
     return rawNotifications.map(notification => {
       const sender = notification.senderId as {
@@ -98,5 +93,33 @@ export class NotificationService {
         updatedAt: notification.updatedAt,
       };
     });
+  }
+
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    const notification = await this.notificationModel.findOne({
+      _id: new Types.ObjectId(notificationId),
+      receiverId: new Types.ObjectId(userId),
+    });
+
+    if (!notification) {
+      throw new Error('Notification not found or does not belong to the user');
+    }
+
+    notification.isRead = true;
+    await notification.save();
+  }
+
+  async markNotificationsAsRead(notifIds: string[], userId: string): Promise<void> {
+    const notifications = await this.notificationModel.updateMany(
+      {
+        _id: { $in: notifIds.map(id => new Types.ObjectId(id)) },
+        receiverId: new Types.ObjectId(userId),
+      },
+      { $set: { isRead: true } },
+    );
+
+    if (notifications.matchedCount === 0) {
+      throw new Error('No notifications found or they do not belong to the user');
+    }
   }
 }

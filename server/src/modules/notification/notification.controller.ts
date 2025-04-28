@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { NotificationContentEnum, NotificationTypeEnum } from 'src/common/enums/notification.enum';
 import { Request } from 'express';
-import { NotificationResponseDto } from './dto/notification.response';
+import { NotificationResponseDto } from './dto/response/notification.response';
 
 @Controller('notification')
 export class NotificationController {
@@ -47,5 +47,25 @@ export class NotificationController {
       limitNumber,
       skipNumber,
     );
+  }
+
+  @Post(':id')
+  async markNotificationAsRead(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ): Promise<{ message: string }> {
+    const userId = req.user._id;
+    await this.notificationService.markNotificationAsRead(id, userId);
+    return { message: 'Notification marked as read' };
+  }
+
+  @Post('/')
+  async markNotificationsAsRead(
+    @Req() req: Request,
+    @Body() notifIds: string[],
+  ): Promise<{ message: string }> {
+    const userId = req.user._id;
+    await this.notificationService.markNotificationsAsRead(notifIds, userId);
+    return { message: 'Notifications marked as read' };
   }
 }

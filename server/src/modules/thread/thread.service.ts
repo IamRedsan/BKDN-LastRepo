@@ -127,7 +127,6 @@ export class ThreadService {
         },
       })
       .exec();
-    console.log(mainThread);
     if (!mainThread) {
       throw new NotFoundException('Thread not found');
     }
