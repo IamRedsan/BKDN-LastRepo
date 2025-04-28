@@ -2,7 +2,10 @@ import { NotificationContentEnum, NotificationTypeEnum } from 'src/common/enums/
 
 export class NotificationResponseDto {
   _id: string;
-  threadId?: string | null;
+  thread: {
+    _id: string;
+    content: string;
+  } | null;
   sender: {
     name: string;
     username: string;

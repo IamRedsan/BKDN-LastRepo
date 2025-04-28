@@ -88,7 +88,7 @@ importers:
         version: 7.8.2
       server:
         specifier: 'file:'
-        version: file:(@nestjs/websockets@11.1.0)
+        version: 'file:'
       sharp:
         specifier: ^0.34.1
         version: 0.34.1
@@ -6941,7 +6941,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  server@file:(@nestjs/websockets@11.1.0):
+  'server@file:':
     dependencies:
       '@nestjs/common': 11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/config': 4.0.2(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
@@ -6950,7 +6950,9 @@ snapshots:
       '@nestjs/mongoose': 11.0.3(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.0.12)(mongoose@8.13.1)(rxjs@7.8.2)
       '@nestjs/passport': 11.0.5(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
       '@nestjs/platform-express': 11.0.12(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.0.12)
+      '@nestjs/platform-socket.io': 11.1.0(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.0)(rxjs@7.8.2)
       '@nestjs/swagger': 11.1.0(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.0.12)(class-validator@0.14.1)(reflect-metadata@0.2.2)
+      '@nestjs/websockets': 11.1.0(@nestjs/common@11.0.12(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.0.12)(@nestjs/platform-socket.io@11.1.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@types/nodemailer': 6.4.17
       aws-sdk: 2.1692.0
       bcryptjs: 3.0.2
@@ -6968,13 +6970,14 @@ snapshots:
       reflect-metadata: 0.2.2
       rxjs: 7.8.2
       sharp: 0.34.1
+      socket.io: 4.8.1
       streamifier: 0.1.1
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@fastify/static'
       - '@mongodb-js/zstd'
       - '@nestjs/microservices'
-      - '@nestjs/websockets'
+      - bufferutil
       - class-transformer
       - encoding
       - gcp-metadata
@@ -6983,6 +6986,7 @@ snapshots:
       - snappy
       - socks
       - supports-color
+      - utf-8-validate
       - ws
       - zod
 

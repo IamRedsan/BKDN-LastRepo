@@ -11,7 +11,7 @@ export class Notification extends Document {
   receiverId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Thread', required: false })
-  threadId?: Types.ObjectId;
+  thread?: Types.ObjectId;
 
   @Prop({
     type: String,
@@ -23,12 +23,12 @@ export class Notification extends Document {
   @Prop({
     type: String,
     enum: [
-      'notification.like',
-      'notification.follow',
-      'notification.comment',
-      'notification.repost',
+      'notification_like',
+      'notification_follow',
+      'notification_comment',
+      'notification_repost',
     ],
-    default: 'notification.like',
+    default: 'notification_like',
   })
   content: NotificationContentEnum;
 

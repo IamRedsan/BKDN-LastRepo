@@ -21,6 +21,7 @@ export class NotificationService {
     receiverUsername: string;
     type: NotificationTypeEnum;
     threadId?: string;
+    threadContent?: string;
     content: NotificationContentEnum;
   }) {
     const sender = await this.userService.findByUsername(data.senderUsername);
@@ -31,7 +32,10 @@ export class NotificationService {
       receiverId: receiver._id,
       isRead: false,
       type: data.type,
-      threadId: data.threadId,
+      thread: {
+        _id: data.threadId,
+        content: data.threadContent,
+      },
       content: data.content,
     });
 
@@ -49,18 +53,33 @@ export class NotificationService {
     });
   }
 
-  async getNotifications(userId: string): Promise<NotificationResponseDto[]> {
-    let notifications: NotificationResponseDto[] = [];
+  async getNotifications(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    skip: number = 0, // Thêm tham số skip
+  ): Promise<NotificationResponseDto[]> {
+    const calculatedSkip: number = skip + (page - 1) * limit; // Tính toán số lượng cần bỏ qua
+    console.log('calculatedSkip', calculatedSkip);
+
     const rawNotifications: any = await this.notificationModel
       .find({ receiverId: new Types.ObjectId(userId) })
       .populate({
         path: 'senderId',
         select: 'username name avatar',
       })
+      .populate({
+        path: 'thread',
+        select: '_id content',
+      })
       .sort({ createdAt: -1 })
+      .skip(calculatedSkip) // Áp dụng skip
+      .limit(limit)
       .lean();
 
-    notifications = rawNotifications.map(notification => {
+    console.log('rawNotifications', rawNotifications);
+
+    return rawNotifications.map(notification => {
       const sender = notification.senderId as {
         _id: string;
         username: string;
@@ -74,12 +93,10 @@ export class NotificationService {
         isRead: notification.isRead,
         type: notification.type,
         content: notification.content,
-        threadId: notification.threadId,
+        thread: notification.thread,
         createdAt: notification.createdAt,
         updatedAt: notification.updatedAt,
       };
     });
-
-    return notifications;
   }
 }
