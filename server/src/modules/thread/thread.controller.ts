@@ -74,8 +74,6 @@ export class ThreadController {
             .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
             .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
             .toBuffer();
-
-          console.log('Processed image buffer size:', processedBuffer.length);
         }
 
         const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
@@ -122,8 +120,6 @@ export class ThreadController {
     let isToxicImage = false;
     if (media && media.length > 0) {
       for (const image of media) {
-        console.log('Original image buffer size:', image.buffer.length);
-
         // Resize and compress the image if it exceeds 5 MB
         let processedBuffer = image.buffer;
         if (image.buffer.length > 5242880) {
@@ -131,8 +127,6 @@ export class ThreadController {
             .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
             .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
             .toBuffer();
-
-          console.log('Processed image buffer size:', processedBuffer.length);
         }
 
         const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);

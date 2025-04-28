@@ -7,7 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { NotificationResponseDto } from './dto/notification.response';
+import { NotificationResponseDto } from './dto/response/notification.response';
 
 @WebSocketGateway({
   cors: {

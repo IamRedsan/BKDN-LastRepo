@@ -6,16 +6,23 @@ import { Home, Search, PlusSquare, Bell, User } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import CreatePostDialog from "@/components/posts/create-post-dialog";
 import { useUserContext } from "@/contexts/userContext";
+import { useNotification } from "@/contexts/notifContext";
 
 export default function MobileNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { user } = useUserContext();
+  const { notReadCount } = useNotification();
 
   const navItems = [
     { icon: Home, label: t("home"), href: "/user" },
     { icon: Search, label: t("search"), href: "/user/search" },
-    { icon: Bell, label: t("notifications"), href: "/user/notifications" },
+    {
+      icon: Bell,
+      label: t("notifications"),
+      href: "/user/notifications",
+      hasNotification: notReadCount > 0,
+    },
     {
       icon: User,
       label: t("profile"),
@@ -35,6 +42,9 @@ export default function MobileNav() {
             }`}
           >
             <item.icon size={24} className="mb-1" />
+            {item.hasNotification && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+            )}
             <span className="text-xs">{item.label}</span>
           </Link>
         ))}

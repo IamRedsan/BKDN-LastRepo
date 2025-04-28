@@ -10,6 +10,10 @@ import { useUserContext } from "./userContext";
 import { client } from "@/shared/axiosClient";
 import { INotification } from "@/interfaces/notification";
 import { NOTIFICATION_PAGE_LIMIT } from "@/constants/notification-page-limit";
+import {
+  useMarkNotificationAsRead,
+  useMarkNotificationsAsRead,
+} from "@/hooks/api/use-notif";
 
 interface NotificationContextType {
   notifications: INotification[];
@@ -40,31 +44,50 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [limit] = useState<number>(NOTIFICATION_PAGE_LIMIT); // Số lượng thông báo mỗi lần tải
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [skip, setSkip] = useState<number>(0);
+  const { mutate: markNotificationAsRead } = useMarkNotificationAsRead();
+  const { mutate: markNotificationsAsRead } = useMarkNotificationsAsRead();
 
   const readNotification = (index: number) => {
-    setNotReadCount((prev) => prev - 1);
-    setNotifications((prev) =>
-      prev.map((notification, i) => {
-        if (index !== i) {
-          return notification;
-        }
+    markNotificationAsRead(notifications[index]._id, {
+      onSuccess: () => {
+        setNotReadCount((prev) => prev - 1);
+        setNotifications((prev) =>
+          prev.map((notification, i) => {
+            if (index !== i) {
+              return notification;
+            }
 
-        return {
-          ...notification,
-          isRead: true,
-        };
-      })
-    );
+            return {
+              ...notification,
+              isRead: true,
+            };
+          })
+        );
+      },
+      onError: () => {
+        console.error("Failed to mark notification as read");
+      },
+    });
   };
 
   const readAllNotifications = () => {
-    setNotReadCount(0);
-    setNotifications((prev) =>
-      prev.map((notification) => ({
-        ...notification,
-        isRead: true,
-      }))
-    );
+    const notifIds: string[] = notifications
+      .filter((n) => !n.isRead)
+      .map((n) => n._id);
+    markNotificationsAsRead(notifIds, {
+      onSuccess: () => {
+        setNotReadCount(0);
+        setNotifications((prev) =>
+          prev.map((notification) => ({
+            ...notification,
+            isRead: true,
+          }))
+        );
+      },
+      onError: () => {
+        console.error("Failed to mark all notifications as read");
+      },
+    });
   };
 
   const loadMoreNotifications = async () => {
