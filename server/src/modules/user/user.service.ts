@@ -43,6 +43,46 @@ export class UserService {
     return this.userModel.findOne({ username });
   }
 
+  async whoamiById(userId: string): Promise<WhoamiResponseDto> {
+    const user: any = await this.userModel
+      .findById(userId)
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
+
+    const { password, ...userWithoutPassword } = user;
+    return {
+      ...userWithoutPassword,
+      followers: formattedFollowers,
+      following: formattedFollowing,
+    };
+  }
+
+  async whoamiByUsername(username: string): Promise<WhoamiResponseDto> {
+    const user: any = await this.userModel
+      .findOne({ username })
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
+
+    const { password, ...userWithoutPassword } = user;
+    return {
+      ...userWithoutPassword,
+      followers: formattedFollowers,
+      following: formattedFollowing,
+    };
+  }
+
   async findById(id: string): Promise<User> {
     const user = await this.userModel.findById(id).lean();
     if (!user) {
@@ -70,37 +110,79 @@ export class UserService {
     return user.save();
   }
 
-  async followUser(userId: string, targetUserId: string): Promise<User> {
-    const user = await this.findById(userId);
-    const targetUser = await this.findById(targetUserId);
+  async followUser(userId: string, targetUsername: string): Promise<string> {
+    const user = await this.userModel.findById(userId);
+    const targetUser = await this.findByUsername(targetUsername);
+
+    if (!targetUser) {
+      throw new NotFoundException('Target user not found');
+    }
 
     const targetUserObjectId = targetUser._id as Types.ObjectId;
     const userObjectId = user._id as Types.ObjectId;
 
-    if (!user.following.some(id => id.equals(targetUserObjectId))) {
+    const isFollowing = user.following.some(id => id.equals(targetUserObjectId));
+    let message: string;
+    if (isFollowing) {
+      // Unfollow logic
+      user.following = user.following.filter(id => !id.equals(targetUserObjectId));
+      user.followingCount -= 1;
+      targetUser.followers = targetUser.followers.filter(id => !id.equals(userObjectId));
+      targetUser.followersCount -= 1;
+      message = 'Unfollowed user successfully';
+    } else {
+      // Follow logic
       user.following.push(targetUserObjectId);
       user.followingCount += 1;
       targetUser.followers.push(userObjectId);
       targetUser.followersCount += 1;
-
-      await targetUser.save();
-      return user.save();
+      message = 'Followed user successfully';
     }
 
-    return user;
+    await targetUser.save();
+    await user.save();
+    return message;
   }
 
-  async unfollowUser(userId: string, targetUserId: string): Promise<User> {
+  async unfollowUser(userId: string, targetUsername: string): Promise<User> {
     const user = await this.findById(userId);
-    const targetUser = await this.findById(targetUserId);
+    if (user.username === targetUsername) {
+      throw new BadRequestException('You cannot unfollow yourself');
+    }
 
-    user.following = user.following.filter(id => id.toString() !== targetUserId);
+    const targetUser = await this.findByUsername(targetUsername);
+
+    user.following = user.following.filter(id => id.toString() !== targetUser._id.toString());
     user.followingCount -= 1;
     targetUser.followers = targetUser.followers.filter(id => id.toString() !== userId);
     targetUser.followersCount -= 1;
 
     await targetUser.save();
     return user.save();
+  }
+
+  async getFollowers(username: string): Promise<any[]> {
+    const user: any = await this.userModel
+      .findOne({ username: username })
+      .populate('followers', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    return formattedFollowers;
+  }
+
+  async getFollowing(username: string): Promise<any[]> {
+    const user: any = await this.userModel
+      .findOne({ username: username })
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowing = user.followers.map(({ _id, ...rest }) => rest);
+    return formattedFollowing;
   }
 
   async create(userData: Partial<User>): Promise<User> {

@@ -1,5 +1,5 @@
-import { Language } from '@/enums/Language';
-import { Theme } from '@/enums/Theme';
+import { Language } from "@/enums/Language";
+import { Theme } from "@/enums/Theme";
 
 export interface IUser {
   email: string;
@@ -13,12 +13,20 @@ export interface IUser {
   havePassword: boolean;
   role: string;
   status: string;
-  followers: string[];
-  following: string[];
+  followers: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
+  following: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
   followersCount: number;
   followingCount: number;
   theme: Theme;
   language: Language;
   createdAt: Date;
   updatedAt: Date;
-} 
+}

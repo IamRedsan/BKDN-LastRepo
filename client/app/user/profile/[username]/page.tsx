@@ -21,7 +21,6 @@ import { setReThreads } from "@/store/profile-rethread-slice";
 
 export default function ProfilePage() {
   const { username } = useParams();
-  const [callAPI, setCallAPI] = useState(false);
   const { user } = useUserContext();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<IUser | null>(() => {

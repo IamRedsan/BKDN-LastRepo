@@ -69,7 +69,7 @@ export class NotificationService {
         path: 'thread',
         select: '_id content',
       })
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .skip(calculatedSkip)
       .limit(limit)
       .lean();

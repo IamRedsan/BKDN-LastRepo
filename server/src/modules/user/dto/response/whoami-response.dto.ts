@@ -10,8 +10,16 @@ export class WhoamiResponseDto {
   bio: string;
   avatar: string;
   wallpaper: string;
-  followers: string[];
-  following: string[];
+  followers: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
+  following: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
   followersCount: number;
   followingCount: number;
   createdAt: Date;

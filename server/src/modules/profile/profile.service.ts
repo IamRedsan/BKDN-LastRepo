@@ -12,21 +12,18 @@ export class ProfileService {
 
   async getUserProfile(username: string, currentUsername: string): Promise<ProfileResponseDto> {
     // Tìm user theo username
-    const user = await this.userService.findByUsername(username);
+    const user = await this.userService.whoamiByUsername(username);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
     // Sử dụng ThreadService để lấy threads và reThreads
     const { threads, reThreads } = await this.threadService.getThreadsByUsername(
       username,
       currentUsername,
     );
 
-    // Chuẩn bị dữ liệu trả về
-    const { password, ...userWithoutPassword } = user.toObject();
     return {
-      user: userWithoutPassword,
+      user,
       threads,
       reThreads,
     };
