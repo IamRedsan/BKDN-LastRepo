@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Notification } from 'src/common/schemas/notification.schema';
@@ -15,6 +15,45 @@ export class NotificationService {
     private notificationGateway: NotificationGateway,
     private readonly userService: UserService,
   ) {}
+
+  async generateNotificationFollow(senderId: string, receiverId: string) {
+    const sender = await this.userService.findById(senderId);
+    const receiver = await this.userService.findById(receiverId);
+    if (!sender || !receiver) {
+      throw new Error('Sender or receiver not found');
+    }
+    const notification: any = await this.notificationModel.findOne({
+      senderId: new Types.ObjectId(senderId),
+      receiverId: new Types.ObjectId(receiverId),
+      type: NotificationTypeEnum.FOLLOW,
+    });
+    if (notification) {
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      if (notification.updatedAt < twoHoursAgo) {
+        notification.set('updatedAt', new Date());
+        notification.set('isRead', false);
+        await notification.save();
+        const { receiverId, senderId, ...notificationWithoutId } = notification.toObject();
+
+        this.notificationGateway.sendNotification(receiver.username, {
+          _id: notification._id.toString(),
+          sender: {
+            username: sender.username,
+            avatar: sender.avatar,
+            name: sender.name,
+          },
+          ...notificationWithoutId,
+        });
+      }
+    } else {
+      await this.createNotification({
+        senderUsername: sender.username,
+        receiverUsername: receiver.username,
+        type: NotificationTypeEnum.FOLLOW,
+        content: NotificationContentEnum.FOLLOW,
+      });
+    }
+  }
 
   async createNotification(data: {
     senderUsername: string;
@@ -40,7 +79,7 @@ export class NotificationService {
     });
 
     await notification.save();
-
+    const { receiverId, senderId, ...notificationWithoutId } = notification.toObject();
     this.notificationGateway.sendNotification(data.receiverUsername, {
       _id: notification._id.toString(),
       sender: {
@@ -48,7 +87,7 @@ export class NotificationService {
         avatar: sender.avatar,
         name: sender.name,
       },
-      ...notification.toObject(),
+      ...notificationWithoutId,
     });
   }
 
@@ -69,7 +108,7 @@ export class NotificationService {
         path: 'thread',
         select: '_id content',
       })
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .skip(calculatedSkip)
       .limit(limit)
       .lean();

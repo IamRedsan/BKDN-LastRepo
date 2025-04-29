@@ -65,6 +65,9 @@ export class NotificationController {
     @Body() notifIds: string[],
   ): Promise<{ message: string }> {
     const userId = req.user._id;
+    if (!notifIds || notifIds.length === 0) {
+      return { message: 'No notifications to mark as read' };
+    }
     await this.notificationService.markNotificationsAsRead(notifIds, userId);
     return { message: 'Notifications marked as read' };
   }

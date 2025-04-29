@@ -1,5 +1,11 @@
 import { defaultWallpaperUrl, defaultAvatarUrl } from './../../common/constant/default-varaible';
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/common/schemas/user.schema';
@@ -12,7 +18,6 @@ import { UpdateUserSettingRequestDto } from './dto/request/update-setting-reques
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { Socket } from 'socket.io';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -35,6 +40,14 @@ export class UserService {
     return newUser.save();
   }
 
+  async findByIdNotLean(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email });
   }
@@ -43,12 +56,63 @@ export class UserService {
     return this.userModel.findOne({ username });
   }
 
+  async findByIdWithPopulate(id: string): Promise<User> {
+    const user: any = await this.userModel
+      .findById(id)
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   async findById(id: string): Promise<User> {
     const user = await this.userModel.findById(id).lean();
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async whoamiById(userId: string): Promise<WhoamiResponseDto> {
+    const user: any = await this.userModel
+      .findById(userId)
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
+
+    const { password, _id, googleId, ...formattedUser } = user;
+    return {
+      ...formattedUser,
+      followers: formattedFollowers,
+      following: formattedFollowing,
+    };
+  }
+
+  async whoamiByUsername(username: string): Promise<WhoamiResponseDto> {
+    const user: any = await this.userModel
+      .findOne({ username })
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
+
+    const { password, _id, googleId, ...formattedUser } = user;
+    return {
+      ...formattedUser,
+      followers: formattedFollowers,
+      following: formattedFollowing,
+    };
   }
 
   async update(id: string, userData: Partial<User>): Promise<User> {
@@ -70,37 +134,28 @@ export class UserService {
     return user.save();
   }
 
-  async followUser(userId: string, targetUserId: string): Promise<User> {
-    const user = await this.findById(userId);
-    const targetUser = await this.findById(targetUserId);
-
-    const targetUserObjectId = targetUser._id as Types.ObjectId;
-    const userObjectId = user._id as Types.ObjectId;
-
-    if (!user.following.some(id => id.equals(targetUserObjectId))) {
-      user.following.push(targetUserObjectId);
-      user.followingCount += 1;
-      targetUser.followers.push(userObjectId);
-      targetUser.followersCount += 1;
-
-      await targetUser.save();
-      return user.save();
+  async getFollowers(username: string): Promise<any[]> {
+    const user: any = await this.userModel
+      .findOne({ username: username })
+      .populate('followers', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
-
-    return user;
+    const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
+    return formattedFollowers;
   }
 
-  async unfollowUser(userId: string, targetUserId: string): Promise<User> {
-    const user = await this.findById(userId);
-    const targetUser = await this.findById(targetUserId);
-
-    user.following = user.following.filter(id => id.toString() !== targetUserId);
-    user.followingCount -= 1;
-    targetUser.followers = targetUser.followers.filter(id => id.toString() !== userId);
-    targetUser.followersCount -= 1;
-
-    await targetUser.save();
-    return user.save();
+  async getFollowing(username: string): Promise<any[]> {
+    const user: any = await this.userModel
+      .findOne({ username: username })
+      .populate('following', 'username name avatar')
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const formattedFollowing = user.followers.map(({ _id, ...rest }) => rest);
+    return formattedFollowing;
   }
 
   async create(userData: Partial<User>): Promise<User> {

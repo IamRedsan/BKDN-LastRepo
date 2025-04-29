@@ -10,6 +10,7 @@ import {
   Patch,
   Body,
   BadRequestException,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
@@ -19,16 +20,16 @@ import { File } from 'multer';
 import { UpdateUserInfoRequestDto } from './dto/request/update-info-request.dto';
 import { UpdateUserSettingRequestDto } from './dto/request/update-setting-request.dto';
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
+import { FollowTriggleResponseDto } from '../action/dto/response/follow-triggle-response.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('whoami')
-  getProfile(@Req() req: Request): WhoamiResponseDto {
-    const user = req.user;
-    delete user._id;
-    delete user.googleId;
+  async getProfile(@Req() req: Request): Promise<WhoamiResponseDto> {
+    const userId = req.user._id.toString();
+    const user = await this.userService.whoamiById(userId);
     return user;
   }
 
@@ -88,5 +89,17 @@ export class UserController {
     const userId = req.user._id.toString();
     const updatedUser = await this.userService.changePassword(userId, changePasswordDto);
     return updatedUser;
+  }
+
+  @Get('followers/:username')
+  @HttpCode(HttpStatus.OK)
+  async getFollowers(@Param('username') targetUsername: string): Promise<any[]> {
+    return await this.userService.getFollowers(targetUsername);
+  }
+
+  @Get('following/:username')
+  @HttpCode(HttpStatus.OK)
+  async getFollowing(@Param('username') targetUsername: string): Promise<any[]> {
+    return await this.userService.getFollowing(targetUsername);
   }
 }

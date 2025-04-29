@@ -74,6 +74,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     const notifIds: string[] = notifications
       .filter((n) => !n.isRead)
       .map((n) => n._id);
+    if (notifIds.length === 0) {
+      return; // Không có thông báo nào chưa đọc
+    }
     markNotificationsAsRead(notifIds, {
       onSuccess: () => {
         setNotReadCount(0);
@@ -147,22 +150,31 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       return;
     }
 
-    const socket = io(`${process.env.NEXT_PUBLIC_SERVER_URL}`); // Sử dụng socket.io
+    const socket = io(`${process.env.NEXT_PUBLIC_SERVER_URL}`);
 
-    socket.emit("register", user.username); // Gửi đăng ký socket với userId
-
+    socket.emit("register", user.username);
     socket.on("new_notification", (notification: INotification) => {
-      setNotReadCount((prev) => prev + 1);
+      setNotifications((prev) => {
+        const existingIndex = prev.findIndex((n) => n._id === notification._id);
+
+        if (existingIndex !== -1) {
+          const updatedNotifications = [...prev];
+          updatedNotifications[existingIndex] = { ...notification };
+          return updatedNotifications;
+        }
+
+        return [{ ...notification }, ...prev];
+      });
+
+      if (!notification.isRead) {
+        setNotReadCount((prev) => prev + 1);
+      }
+
       setSkip((prev) => prev + 1);
-      setNotifications((prev) =>
-        Array.isArray(prev)
-          ? [{ ...notification }, ...prev]
-          : [{ ...notification }]
-      );
     });
 
     return () => {
-      socket.disconnect(); // Đảm bảo tắt kết nối khi component unmount
+      socket.disconnect();
     };
   }, [user]);
 
