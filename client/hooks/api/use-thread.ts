@@ -93,7 +93,6 @@ export const useUpdateThread = () => {
     },
     onSuccess: (thread, variables) => {
       if (thread.parentThreadId) {
-        console.log("variables.parentThreadId", thread.parentThreadId);
         queryClient.invalidateQueries({
           queryKey: ["threadDetail", variables.parentThreadId],
         });

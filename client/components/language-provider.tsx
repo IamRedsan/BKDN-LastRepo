@@ -125,6 +125,11 @@ const translations = {
     markAllAsRead: "Mark all as read",
     loadingMoreNotifications: "Loading more notifications...",
     noMoreNotifications: "No more notifications.",
+    follow: "Follow",
+    unfollow: "Unfollow",
+    noFollowers: "Have no followers",
+    noFollowing: "Have no following ",
+    removeFollower: "Remove Follower",
   },
   vi: {
     home: "Trang chủ",
@@ -240,6 +245,11 @@ const translations = {
     markAllAsRead: "Đánh dấu tất cả là đã đọc",
     loadingMoreNotifications: "Đang tải thêm thông báo...",
     noMoreNotifications: "Không còn thông báo nào nữa.",
+    follow: "Theo dõi",
+    unfollow: "Bỏ theo dõi",
+    noFollowers: "Không có người theo dõi",
+    noFollowing: "Không theo dõi người nào",
+    removeFollower: "Huỷ người theo dõi",
   },
   ja: {
     home: "ホーム",
@@ -353,6 +363,11 @@ const translations = {
     markAllAsRead: "すべて既読にする",
     loadingMoreNotifications: "通知をさらに読み込んでいます...",
     noMoreNotifications: "これ以上の通知はありません。",
+    follow: "フォロー",
+    unfollow: "フォロー解除",
+    noFollowers: "フォロワーがいません",
+    noFollowing: "フォロー中の人はいません",
+    removeFollower: "フォロワーを削除",
   },
 };
 

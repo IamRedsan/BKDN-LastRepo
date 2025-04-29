@@ -121,31 +121,3 @@ export const useGetProfile = (username: string) => {
     staleTime: 1000 * 60 * 1, // Thời gian dữ liệu được coi là mới
   });
 };
-
-// Follow a user
-export const useFollowUser = () => {
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await client.post(`/users/${userId}/follow`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-    onError: (error: any) => {},
-  });
-};
-
-// Remove a follower
-export const useRemoveFollower = () => {
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await client.delete(`/users/${userId}/follower`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-    onError: (error: any) => {},
-  });
-};

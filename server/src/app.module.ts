@@ -15,6 +15,8 @@ import { AppService } from './app.service';
 import { OpenAIService } from './modules/openai/openai.service';
 import { RekognitionModule } from './modules/rekognition/rekognition.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { Action } from 'rxjs/internal/scheduler/Action';
+import { ActionModule } from './modules/action/action.module';
 
 @Module({
   imports: [
@@ -54,6 +56,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     OpenAIModule,
     RekognitionModule,
     NotificationModule,
+    ActionModule,
   ],
   controllers: [AppController],
   providers: [AppService, OpenAIService],

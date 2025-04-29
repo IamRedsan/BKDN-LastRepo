@@ -13,15 +13,16 @@ import { useParams } from "next/navigation";
 import { IUser } from "@/interfaces/user";
 import { useGetProfile } from "@/hooks/api/use-user";
 import { ProfileSkeleton } from "@/components/loading/profile-skeleton";
-import { IThread } from "@/interfaces/thread";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setThreads } from "@/store/profile-thread-slice";
 import { setReThreads } from "@/store/profile-rethread-slice";
+import FollowDialog from "@/components/profile/follow-dialog";
+import { useFollowTrigger } from "@/hooks/api/use-action";
 
 export default function ProfilePage() {
   const { username } = useParams();
-  const { user } = useUserContext();
+  const { user, setUser } = useUserContext();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<IUser | null>(() => {
     if (user?.username === username) {
@@ -36,64 +37,43 @@ export default function ProfilePage() {
   );
   const { t } = useLanguage();
   const [isMyProfile, setIsMyProfile] = useState<boolean>(false);
-
+  const [isFollowingProfile, setIsFollowingProfile] = useState<boolean>(false);
+  const [isFollowDialogOpen, setIsFollowDialogOpen] = useState<boolean>(false);
+  const [activeFollowTab, setActiveFollowTab] = useState<
+    "followers" | "following"
+  >("followers");
   const { data, error, isLoading } = useGetProfile(username as string);
+  const { mutate: followTrigger, isPending: isFollowLoading } =
+    useFollowTrigger();
 
-  // const handleLike = (postId: string) => {
-  //   setPosts(
-  //     posts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isLiked: !post.isLiked,
-  //           likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
+  const handleFollowToggle = async () => {
+    if (!profile) {
+      return;
+    }
+    followTrigger(profile.username, {
+      onSuccess: (data) => {
+        if (user) {
+          user.following = data.following;
+          user.followingCount = data.followingCount;
+          setUser(user);
+          setIsFollowingProfile((prev) => !prev);
+        }
+      },
+    });
+  };
 
-  //   setReposts(
-  //     reposts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isLiked: !post.isLiked,
-  //           likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
-  // };
+  const openFollowersDialog = () => {
+    if (!profile) return;
+    setActiveFollowTab("followers");
+    setIsFollowDialogOpen(true);
+  };
 
-  // const handleRepost = (postId: string) => {
-  //   setPosts(
-  //     posts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isReposted: !post.isReposted,
-  //           reposts: post.isReposted ? post.reposts - 1 : post.reposts + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
+  const openFollowingDialog = () => {
+    if (!profile) return;
+    setActiveFollowTab("following");
+    setIsFollowDialogOpen(true);
+  };
 
-  //   setReposts(
-  //     reposts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isReposted: !post.isReposted,
-  //           reposts: post.isReposted ? post.reposts - 1 : post.reposts + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
-  // };
   useEffect(() => {
     if (data) {
       if (data.user.username === user?.username) {
@@ -102,10 +82,17 @@ export default function ProfilePage() {
       setProfile(data.user);
       dispatch(setThreads(data.threads));
       dispatch(setReThreads(data.reThreads));
+      data.user.followers.some((follower) => {
+        if (follower.username === user?.username) {
+          setIsFollowingProfile(true);
+          return true;
+        }
+        return false;
+      });
     }
-  }, [data]);
+  }, [data, dispatch, user, username]);
 
-  if (isLoading) {
+  if (isLoading || profile === null) {
     return (
       <div>
         <ProfileSkeleton />
@@ -167,16 +154,31 @@ export default function ProfilePage() {
 
           <p>{profile?.bio ?? ""}</p>
 
-          <div className="flex space-x-4">
-            <span>
-              <strong>{profile?.followersCount ?? 0}</strong> {t("followers")}
+          <div className="flex space-x-4 gap-3">
+            <span
+              onClick={openFollowersDialog}
+              className="cursor-pointer hover:underline focus:outline-none"
+            >
+              <strong className="mr-1">{profile?.followersCount ?? 0}</strong>
+              {t("followers")}
             </span>
-            <span>
-              <strong>{profile?.followingCount ?? 0}</strong> {t("following")}
+            <span
+              onClick={openFollowingDialog}
+              className="cursor-pointer hover:underline focus:outline-none"
+            >
+              <strong className="mr-1">{profile?.followingCount ?? 0}</strong>
+              {t("following")}
             </span>
           </div>
           {!isMyProfile && (
-            <Button className="w-full">{t("followUser")}</Button>
+            <Button
+              className="w-full"
+              onClick={handleFollowToggle}
+              disabled={isFollowLoading}
+              variant={isFollowingProfile ? "outline" : "default"}
+            >
+              {isFollowingProfile ? t("unfollow") : t("follow")}
+            </Button>
           )}
         </div>
 
@@ -192,16 +194,7 @@ export default function ProfilePage() {
           </TabsList>
           <TabsContent value="posts" className="space-y-4 mt-4">
             {posts.length > 0 ? (
-              posts.map((post) => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  // onLike={handleLike}
-                  // onRepost={handleRepost}
-                  // onLike={() => {}}
-                  // onRepost={() => {}}
-                />
-              ))
+              posts.map((post) => <PostCard key={post._id} post={post} />)
             ) : (
               <p className="flex flex-1 items-center justify-center mt-4">
                 {t("noPosts")}
@@ -210,16 +203,7 @@ export default function ProfilePage() {
           </TabsContent>
           <TabsContent value="reposts" className="space-y-4 mt-4">
             {reposts.length > 0 ? (
-              reposts.map((post) => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  // onLike={handleLike}
-                  // onRepost={handleRepost}
-                  // onLike={() => {}}
-                  // onRepost={() => {}}
-                />
-              ))
+              reposts.map((post) => <PostCard key={post._id} post={post} />)
             ) : (
               <p className="flex flex-1 items-center justify-center mt-4">
                 {t("noReposts")}
@@ -228,6 +212,14 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
+      <FollowDialog
+        isOpen={isFollowDialogOpen}
+        onClose={() => setIsFollowDialogOpen(false)}
+        followers={profile?.followers ?? []}
+        following={profile?.following ?? []}
+        initialTab={activeFollowTab}
+        profileUsername={profile?.username || ""}
+      />
     </div>
   );
 }

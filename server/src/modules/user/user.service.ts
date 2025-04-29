@@ -1,5 +1,11 @@
 import { defaultWallpaperUrl, defaultAvatarUrl } from './../../common/constant/default-varaible';
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/common/schemas/user.schema';
@@ -12,7 +18,6 @@ import { UpdateUserSettingRequestDto } from './dto/request/update-setting-reques
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { Socket } from 'socket.io';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -35,12 +40,39 @@ export class UserService {
     return newUser.save();
   }
 
+  async findByIdNotLean(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email });
   }
 
   async findByUsername(username: string): Promise<User | null> {
     return this.userModel.findOne({ username });
+  }
+
+  async findByIdWithPopulate(id: string): Promise<User> {
+    const user: any = await this.userModel
+      .findById(id)
+      .populate('followers', 'username name avatar')
+      .populate('following', 'username name avatar');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async findById(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async whoamiById(userId: string): Promise<WhoamiResponseDto> {
@@ -55,9 +87,9 @@ export class UserService {
     const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
     const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
 
-    const { password, ...userWithoutPassword } = user;
+    const { password, _id, googleId, ...formattedUser } = user;
     return {
-      ...userWithoutPassword,
+      ...formattedUser,
       followers: formattedFollowers,
       following: formattedFollowing,
     };
@@ -75,20 +107,12 @@ export class UserService {
     const formattedFollowers = user.followers.map(({ _id, ...rest }) => rest);
     const formattedFollowing = user.following.map(({ _id, ...rest }) => rest);
 
-    const { password, ...userWithoutPassword } = user;
+    const { password, _id, googleId, ...formattedUser } = user;
     return {
-      ...userWithoutPassword,
+      ...formattedUser,
       followers: formattedFollowers,
       following: formattedFollowing,
     };
-  }
-
-  async findById(id: string): Promise<User> {
-    const user = await this.userModel.findById(id).lean();
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user;
   }
 
   async update(id: string, userData: Partial<User>): Promise<User> {
@@ -107,57 +131,6 @@ export class UserService {
   async verifyEmail(userId: string): Promise<User> {
     const user = await this.findById(userId);
     user.isEmailVerified = true;
-    return user.save();
-  }
-
-  async followUser(userId: string, targetUsername: string): Promise<string> {
-    const user = await this.userModel.findById(userId);
-    const targetUser = await this.findByUsername(targetUsername);
-
-    if (!targetUser) {
-      throw new NotFoundException('Target user not found');
-    }
-
-    const targetUserObjectId = targetUser._id as Types.ObjectId;
-    const userObjectId = user._id as Types.ObjectId;
-
-    const isFollowing = user.following.some(id => id.equals(targetUserObjectId));
-    let message: string;
-    if (isFollowing) {
-      // Unfollow logic
-      user.following = user.following.filter(id => !id.equals(targetUserObjectId));
-      user.followingCount -= 1;
-      targetUser.followers = targetUser.followers.filter(id => !id.equals(userObjectId));
-      targetUser.followersCount -= 1;
-      message = 'Unfollowed user successfully';
-    } else {
-      // Follow logic
-      user.following.push(targetUserObjectId);
-      user.followingCount += 1;
-      targetUser.followers.push(userObjectId);
-      targetUser.followersCount += 1;
-      message = 'Followed user successfully';
-    }
-
-    await targetUser.save();
-    await user.save();
-    return message;
-  }
-
-  async unfollowUser(userId: string, targetUsername: string): Promise<User> {
-    const user = await this.findById(userId);
-    if (user.username === targetUsername) {
-      throw new BadRequestException('You cannot unfollow yourself');
-    }
-
-    const targetUser = await this.findByUsername(targetUsername);
-
-    user.following = user.following.filter(id => id.toString() !== targetUser._id.toString());
-    user.followingCount -= 1;
-    targetUser.followers = targetUser.followers.filter(id => id.toString() !== userId);
-    targetUser.followersCount -= 1;
-
-    await targetUser.save();
     return user.save();
   }
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import { useUserContext } from "@/contexts/userContext";
 import { Button } from "@/components/ui/button";
@@ -11,20 +10,24 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { IUser } from "@/interfaces/user";
+import { useFollowTrigger, useRemoveFollower } from "@/hooks/api/use-action";
 
 interface FollowDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  followers: IUser[];
-  following: IUser[];
-  onRemoveFollower: (userId: string) => void;
-  onUnfollow: (userId: string) => void;
-  onFollow: (userId: string) => void;
+  followers: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
+  following: {
+    name: string;
+    username: string;
+    avatar: string;
+  }[];
   initialTab?: "followers" | "following";
   profileUsername: string;
 }
@@ -34,28 +37,65 @@ export default function FollowDialog({
   onClose,
   followers,
   following,
-  onRemoveFollower,
-  onUnfollow,
-  onFollow,
   initialTab = "followers",
   profileUsername,
 }: FollowDialogProps) {
   const { t } = useLanguage();
-  const { user: currentUser } = useUserContext();
+  const { user: currentUser, setUser } = useUserContext();
   const [activeTab, setActiveTab] = useState<string>(initialTab);
-
-  // Check if the current user is viewing their own profile
+  const [localFollowers, setLocalFollowers] = useState(followers);
+  const [localFollowing, setLocalFollowing] = useState(following);
   const isOwnProfile = currentUser?.username === profileUsername;
+  const { mutate: followTrigger } = useFollowTrigger();
+  const { mutate: removeFollower } = useRemoveFollower();
 
-  // Check if current user follows a specific user
-  const isFollowing = (userId: string) => {
-    return following.some(
-      (user) =>
-        currentUser &&
-        user._id === userId &&
-        user.followers?.includes(currentUser._id)
-    );
+  const handleFollowTrigger = (username: string) => {
+    followTrigger(username, {
+      onSuccess: (data) => {
+        // Cập nhật danh sách following
+        if (isOwnProfile) {
+          setLocalFollowing(data.following);
+        }
+        if (currentUser) {
+          setUser({
+            ...currentUser,
+            following: data.following,
+            followingCount: data.followingCount,
+          });
+        }
+      },
+    });
   };
+
+  const handleUnfollow = (username: string) => {
+    removeFollower(username, {
+      onSuccess: (data) => {
+        setLocalFollowers((prevFollowers) =>
+          prevFollowers.filter((follower) => follower.username !== username)
+        );
+        if (currentUser) {
+          setUser({
+            ...currentUser,
+            followers: data.followers,
+            followersCount: data.followersCount,
+          });
+        }
+      },
+    });
+  };
+
+  const isFollowing = (username: string) => {
+    return currentUser?.following.some((user) => user.username === username);
+  };
+
+  const isFollower = (username: string) => {
+    return currentUser?.followers.some((user) => user.username === username);
+  };
+
+  useEffect(() => {
+    setLocalFollowers(followers);
+    setLocalFollowing(following);
+  }, [followers, following]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -65,16 +105,6 @@ export default function FollowDialog({
             <DialogTitle className="text-xl font-bold">
               {activeTab === "followers" ? t("followers") : t("following")}
             </DialogTitle>
-            <DialogClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-8 w-8"
-              >
-                <X size={18} />
-                <span className="sr-only">Close</span>
-              </Button>
-            </DialogClose>
           </div>
         </DialogHeader>
 
@@ -88,19 +118,20 @@ export default function FollowDialog({
             <TabsTrigger value="following">{t("following")}</TabsTrigger>
           </TabsList>
 
+          {/* Followers Tab */}
           <TabsContent
             value="followers"
             className="max-h-[60vh] overflow-y-auto"
           >
-            {followers.length === 0 ? (
+            {localFollowers.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <p>{t("noFollowers")}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {followers.map((follower) => (
+                {localFollowers.map((follower) => (
                   <div
-                    key={follower._id}
+                    key={follower.username}
                     className="flex items-center justify-between py-2"
                   >
                     <Link
@@ -129,28 +160,26 @@ export default function FollowDialog({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onRemoveFollower(follower._id)}
                         className="ml-2 whitespace-nowrap"
+                        onClick={() => handleUnfollow(follower.username)}
                       >
                         {t("removeFollower")}
                       </Button>
                     ) : (
                       currentUser &&
-                      follower._id !== currentUser._id && (
+                      follower.username !== currentUser.username && (
                         <Button
                           variant={
-                            isFollowing(follower._id) ? "outline" : "default"
+                            isFollowing(follower.username)
+                              ? "outline"
+                              : "default"
                           }
                           size="sm"
-                          onClick={() =>
-                            isFollowing(follower._id)
-                              ? onUnfollow(follower._id)
-                              : onFollow(follower._id)
-                          }
                           className="ml-2 whitespace-nowrap"
+                          onClick={() => handleFollowTrigger(follower.username)}
                         >
-                          {isFollowing(follower._id)
-                            ? t("following")
+                          {isFollowing(follower.username)
+                            ? t("unfollow")
                             : t("follow")}
                         </Button>
                       )
@@ -161,19 +190,20 @@ export default function FollowDialog({
             )}
           </TabsContent>
 
+          {/* Following Tab */}
           <TabsContent
             value="following"
             className="max-h-[60vh] overflow-y-auto"
           >
-            {following.length === 0 ? (
+            {localFollowing.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <p>{t("noFollowing")}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {following.map((followedUser) => (
+                {localFollowing.map((followedUser, index) => (
                   <div
-                    key={followedUser._id}
+                    key={`${followedUser.username}-${index}`}
                     className="flex items-center justify-between py-2"
                   >
                     <Link
@@ -204,30 +234,30 @@ export default function FollowDialog({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onUnfollow(followedUser._id)}
                         className="ml-2 whitespace-nowrap"
+                        onClick={() =>
+                          handleFollowTrigger(followedUser.username)
+                        }
                       >
                         {t("unfollow")}
                       </Button>
                     ) : (
                       currentUser &&
-                      followedUser._id !== currentUser._id && (
+                      followedUser.username !== currentUser.username && (
                         <Button
                           variant={
-                            isFollowing(followedUser._id)
+                            isFollowing(followedUser.username)
                               ? "outline"
                               : "default"
                           }
                           size="sm"
-                          onClick={() =>
-                            isFollowing(followedUser._id)
-                              ? onUnfollow(followedUser._id)
-                              : onFollow(followedUser._id)
-                          }
                           className="ml-2 whitespace-nowrap"
+                          onClick={() =>
+                            handleFollowTrigger(followedUser.username)
+                          }
                         >
-                          {isFollowing(followedUser._id)
-                            ? t("following")
+                          {isFollowing(followedUser.username)
+                            ? t("unfollow")
                             : t("follow")}
                         </Button>
                       )

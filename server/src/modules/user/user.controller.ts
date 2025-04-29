@@ -20,6 +20,7 @@ import { File } from 'multer';
 import { UpdateUserInfoRequestDto } from './dto/request/update-info-request.dto';
 import { UpdateUserSettingRequestDto } from './dto/request/update-setting-request.dto';
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
+import { FollowTriggleResponseDto } from '../action/dto/response/follow-triggle-response.dto';
 
 @Controller('user')
 export class UserController {
@@ -90,39 +91,15 @@ export class UserController {
     return updatedUser;
   }
 
-  @Post('follow/:username')
-  @HttpCode(HttpStatus.OK)
-  async followUser(
-    @Req() req: Request,
-    @Param('username') targetUsername: string,
-  ): Promise<{ message: string }> {
-    const userId = req.user._id.toString();
-    const message = await this.userService.followUser(userId, targetUsername);
-    return { message: message };
-  }
-
-  @Post('unfollow/:username')
-  @HttpCode(HttpStatus.OK)
-  async unfollowUser(
-    @Req() req: Request,
-    @Param('username') targetUsername: string,
-  ): Promise<{ message: string }> {
-    const userId = req.user._id.toString();
-    await this.userService.unfollowUser(userId, targetUsername);
-    return { message: 'Unfollowed user successfully' };
-  }
-
   @Get('followers/:username')
   @HttpCode(HttpStatus.OK)
   async getFollowers(@Param('username') targetUsername: string): Promise<any[]> {
-    console.log('getFollowers', targetUsername);
     return await this.userService.getFollowers(targetUsername);
   }
 
   @Get('following/:username')
   @HttpCode(HttpStatus.OK)
   async getFollowing(@Param('username') targetUsername: string): Promise<any[]> {
-    console.log('getFollowing', targetUsername);
     return await this.userService.getFollowing(targetUsername);
   }
 }

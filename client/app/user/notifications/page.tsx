@@ -71,7 +71,7 @@ export default function NotificationsPage() {
         return <Repeat className="h-5 w-5 text-green-500" />;
       case "violation":
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      default:
+      case NotificationTypeEnum.FOLLOW:
         return <Bell className="h-5 w-5 text-purple-500" />;
     }
   };
@@ -94,7 +94,7 @@ export default function NotificationsPage() {
         return (
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500" />
         );
-      default:
+      case NotificationTypeEnum.FOLLOW:
         return (
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />
         );
@@ -104,6 +104,8 @@ export default function NotificationsPage() {
   const getNotificationText = (notification: any) => {
     switch (notification.type) {
       case NotificationTypeEnum.LIKE:
+      case NotificationTypeEnum.REPOST:
+      case NotificationTypeEnum.FOLLOW:
         return (
           <>
             <Link
@@ -128,21 +130,8 @@ export default function NotificationsPage() {
             </span>
           </>
         );
-      case NotificationTypeEnum.REPOST:
-        return (
-          <>
-            <Link
-              href={`/user/profile/${notification.sender.username}`}
-              className="font-medium hover:underline"
-            >
-              {notification.sender.name}
-            </Link>
-          </>
-        );
       case "violation":
         return "Your post has been flagged for violating our community guidelines";
-      default:
-        return null;
     }
   };
 
@@ -156,8 +145,6 @@ export default function NotificationsPage() {
         return "bg-green-50 dark:bg-green-950/20";
       case "violation":
         return "bg-yellow-50 dark:bg-yellow-950/20";
-      default:
-        return "bg-purple-50 dark:bg-purple-950/20";
     }
   };
 
@@ -208,10 +195,9 @@ export default function NotificationsPage() {
                     )}
                     onClick={() => readNotification(index)}
                   >
-                    {!notification.isRead &&
-                      getNotificationUnReadBar(
-                        notification.type
-                      ) // Add the unread bar
+                    {
+                      !notification.isRead &&
+                        getNotificationUnReadBar(notification.type) // Add the unread bar
                     }
 
                     <div className="mt-1 mr-4 relative">

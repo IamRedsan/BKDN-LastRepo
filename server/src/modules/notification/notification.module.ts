@@ -1,5 +1,5 @@
 import { MongooseModule } from '@nestjs/mongoose';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { NotificationGateway } from './notification.gateway';
@@ -14,7 +14,7 @@ import { AuthMiddleware } from 'src/common/middlewares/auth.middleware';
   ],
   controllers: [NotificationController],
   providers: [NotificationService, NotificationGateway],
-  exports: [NotificationService], // nếu chỗ khác cần dùng nữa
+  exports: [NotificationService],
 })
 export class NotificationModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
