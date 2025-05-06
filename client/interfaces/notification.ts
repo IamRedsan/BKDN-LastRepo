@@ -1,7 +1,7 @@
 import {
   NotificationContentEnum,
   NotificationTypeEnum,
-} from "@/enums/notification.enum";
+} from '@/enums/notification.enum';
 
 export interface INotification {
   _id: string;
@@ -15,7 +15,7 @@ export interface INotification {
   content: NotificationContentEnum;
   thread: {
     _id: string;
-    content: string;
+    content: string | null;
   } | null;
   createdAt: string;
   updatedAt: string;
