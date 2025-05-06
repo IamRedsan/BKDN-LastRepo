@@ -163,4 +163,14 @@ export class ThreadController {
     await this.threadService.deleteThread(threadId, userId);
     return { message: 'Thread deleted successfully' };
   }
+
+  @Get('/search')
+  @HttpCode(HttpStatus.OK)
+  async searchThreads(
+    @Req() req: Request,
+    @Query('query') query: string,
+  ): Promise<ThreadResponseDto[]> {
+    const currentUsername = req.user.username; // Lấy username của người tìm kiếm
+    return this.threadService.searchThreads(query, currentUsername);
+  }
 }

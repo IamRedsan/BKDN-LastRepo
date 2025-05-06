@@ -82,9 +82,6 @@ export class NotificationService {
     type: NotificationTypeEnum,
     content: NotificationContentEnum,
   ) {
-    console.log('senderId', senderId);
-    console.log('receiverId', receiverId);
-    console.log('threadId', threadId);
     if (senderId === receiverId) {
       return;
     }

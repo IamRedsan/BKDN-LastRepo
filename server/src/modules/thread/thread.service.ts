@@ -347,12 +347,38 @@ export class ThreadService {
     await this.threadModel.findByIdAndDelete(threadId);
   }
 
+  async searchThreads(query: string, currentUsername: string): Promise<ThreadResponseDto[]> {
+    const currentUser = await this.userService.findByUsername(currentUsername);
+    if (!currentUser) {
+      throw new BadRequestException('Current user not found');
+    }
+
+    const regex = new RegExp(query, 'i'); // 'i' = case-insensitive
+
+    const threads: any = await this.threadModel
+      .find({
+        content: { $regex: regex },
+        $or: [
+          { visibility: Visibility.PUBLIC },
+          {
+            visibility: Visibility.FOLLOWER_ONLY,
+            user: { $in: currentUser.following }, // Chỉ bài của người mình follow
+          },
+        ],
+      })
+      .populate('user', 'username name avatar')
+      .exec();
+    const result = await Promise.all(
+      threads.map(thread => this.mapToThreadResponseDto(thread, currentUser._id.toString())),
+    );
+    return result;
+  }
+
   public async mapToThreadResponseDto(
     thread: any,
     currentUserId: string,
   ): Promise<ThreadResponseDto> {
     const commentNum = await this.threadModel.countDocuments({ parentThreadId: thread._id });
-
     return {
       _id: thread._id,
       content: thread.content,

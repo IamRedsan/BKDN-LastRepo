@@ -149,14 +149,6 @@ export class ActionService {
       thread.reThreadBy.push(new Types.ObjectId(userId));
       thread.sharedNum += 1;
 
-      // // Gửi thông báo rethread
-      // this.notificationService.createNotification({
-      //   senderUsername: (await this.userService.findById(userId)).username,
-      //   receiverUsername: (await this.userService.findById(thread.user.toString())).username,
-      //   type: 'REPOST',
-      //   content: 'notification_repost',
-      //   threadId: threadId,
-      // });
       this.notificationService.generateNotificationRethread(
         userId,
         thread.user._id.toString(),
@@ -168,7 +160,6 @@ export class ActionService {
 
     // Trả về response chuẩn
     const response = await this.threadService.mapToThreadResponseDto(thread, userId);
-    console.log('response', response);
     return response;
   }
 }
