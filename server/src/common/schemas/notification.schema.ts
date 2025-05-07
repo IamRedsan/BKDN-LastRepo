@@ -7,6 +7,14 @@ export class Notification extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   senderId: Types.ObjectId;
 
+  @Prop({
+    type: [Types.ObjectId], // Mảng lưu danh sách đã từng senderIds
+    ref: 'User',
+    default: [],
+    required: false,
+  })
+  senderIds?: Types.ObjectId[];
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   receiverId: Types.ObjectId;
 

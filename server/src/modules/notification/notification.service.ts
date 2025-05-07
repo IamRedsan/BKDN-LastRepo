@@ -16,6 +16,26 @@ export class NotificationService {
     private readonly userService: UserService,
   ) {}
 
+  async generateNotificationLike(senderId: string, receiverId: string, threadId: string) {
+    await this.generateNotification(
+      senderId,
+      receiverId,
+      threadId,
+      NotificationTypeEnum.LIKE,
+      NotificationContentEnum.LIKE,
+    );
+  }
+
+  async generateNotificationRethread(senderId: string, receiverId: string, threadId: string) {
+    await this.generateNotification(
+      senderId,
+      receiverId,
+      threadId,
+      NotificationTypeEnum.REPOST,
+      NotificationContentEnum.REPOST,
+    );
+  }
+
   async generateNotificationFollow(senderId: string, receiverId: string) {
     const sender = await this.userService.findById(senderId);
     const receiver = await this.userService.findById(receiverId);
@@ -51,6 +71,104 @@ export class NotificationService {
         receiverUsername: receiver.username,
         type: NotificationTypeEnum.FOLLOW,
         content: NotificationContentEnum.FOLLOW,
+      });
+    }
+  }
+
+  private async generateNotification(
+    senderId: string,
+    receiverId: string,
+    threadId: string,
+    type: NotificationTypeEnum,
+    content: NotificationContentEnum,
+  ) {
+    console.log('senderId', senderId);
+    console.log('receiverId', receiverId);
+    console.log('threadId', threadId);
+    if (senderId === receiverId) {
+      return;
+    }
+    const notification: any = await this.notificationModel.findOne({
+      receiverId: new Types.ObjectId(receiverId),
+      thread: new Types.ObjectId(threadId),
+      type: type,
+    });
+    const sender = await this.userService.findById(senderId);
+    const receiver = await this.userService.findById(receiverId);
+    if (notification) {
+      const senderExists = notification.senderIds.some(id => id.toString() === senderId);
+
+      // Cập nhật senderId thành người tương tác mới nhất
+      notification.senderId = new Types.ObjectId(senderId);
+
+      if (!senderExists) {
+        // Nếu senderId chưa tồn tại trong senderIds, thêm vào
+        notification.senderIds.push(new Types.ObjectId(senderId));
+      }
+
+      notification.isRead = false; // Đánh dấu thông báo là chưa đọc
+      notification.set('updatedAt', new Date());
+      if (type === NotificationTypeEnum.LIKE) {
+        notification.content = NotificationContentEnum.LIKES;
+      } else if (type === NotificationTypeEnum.REPOST) {
+        notification.content = NotificationContentEnum.REPOSTS;
+      }
+      await notification.save();
+
+      // Lấy thông tin người gửi
+      const sender = await this.userService.findById(senderId);
+      const {
+        receiverId: filter1,
+        senderId: filter2,
+        thread: filter3,
+        ...formattedNotification
+      } = notification.toObject();
+      // Gửi thông báo qua WebSocket
+      this.notificationGateway.sendNotification(receiver.username, {
+        _id: notification._id.toString(),
+        sender: {
+          username: sender.username,
+          avatar: sender.avatar,
+          name: sender.name,
+        },
+        thread: {
+          _id: threadId,
+          content: null,
+        },
+        ...formattedNotification,
+      });
+    } else {
+      // Nếu thông báo chưa tồn tại, tạo mới
+
+      const newNotification: any = new this.notificationModel({
+        receiverId: new Types.ObjectId(receiverId),
+        thread: new Types.ObjectId(threadId),
+        senderId: new Types.ObjectId(senderId), // Người tương tác mới nhất
+        senderIds: [new Types.ObjectId(senderId)], // Danh sách người đã tương tác
+        type: type,
+        content: content,
+        isRead: false,
+      });
+
+      await newNotification.save();
+      const {
+        receiverId: filter1,
+        senderId: filter2,
+        thread: filter3,
+        ...formattedNotification
+      } = newNotification.toObject();
+      this.notificationGateway.sendNotification(receiver.username, {
+        _id: newNotification._id.toString(),
+        sender: {
+          username: sender.username,
+          avatar: sender.avatar,
+          name: sender.name,
+        },
+        thread: {
+          _id: threadId,
+          content: null,
+        },
+        ...formattedNotification,
       });
     }
   }

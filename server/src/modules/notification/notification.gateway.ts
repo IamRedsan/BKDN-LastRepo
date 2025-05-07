@@ -44,8 +44,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     this.logger.log(`User ${userId} registered with socket ${client.id}`);
   }
 
-  sendNotification(receiverId: string, notification: NotificationResponseDto) {
-    const socketId = this.users.get(receiverId);
+  sendNotification(receiverUsername: string, notification: NotificationResponseDto) {
+    const socketId = this.users.get(receiverUsername);
     if (socketId) {
       this.server.to(socketId).emit('new_notification', notification);
     }
