@@ -24,6 +24,17 @@ export class ThreadService {
     private readonly cloudinaryService: CloudinaryService, // Thay thế bằng dịch vụ Cloudinary thực tế
   ) {}
 
+  async findById(threadId: string): Promise<any | null> {
+    const thread = await this.threadModel.findById(threadId).populate({
+      path: 'user',
+      select: 'username name avatar ', // Lấy thêm thông tin followers
+    });
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+    return thread;
+  }
+
   async getThreadsByUsername(
     username: string,
     currentUsername: string,
@@ -336,7 +347,7 @@ export class ThreadService {
     await this.threadModel.findByIdAndDelete(threadId);
   }
 
-  private async mapToThreadResponseDto(
+  public async mapToThreadResponseDto(
     thread: any,
     currentUserId: string,
   ): Promise<ThreadResponseDto> {

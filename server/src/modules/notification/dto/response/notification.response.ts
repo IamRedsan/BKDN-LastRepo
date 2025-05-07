@@ -4,7 +4,7 @@ export class NotificationResponseDto {
   _id: string;
   thread: {
     _id: string;
-    content: string;
+    content: string | null;
   } | null;
   sender: {
     name: string;

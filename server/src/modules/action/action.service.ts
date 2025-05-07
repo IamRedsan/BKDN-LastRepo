@@ -4,12 +4,15 @@ import { NotificationService } from '../notification/notification.service';
 import { FollowTriggleResponseDto } from './dto/response/follow-triggle-response.dto';
 import { Types } from 'mongoose';
 import { UnfollowFollowersResponseDto } from './dto/response/unfollow-followers-response.dto';
+import { ThreadService } from '../thread/thread.service';
+import { ThreadResponseDto } from '../thread/dto/thread-response.dto';
 
 @Injectable()
 export class ActionService {
   constructor(
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
+    private readonly threadService: ThreadService, // Assuming you have a thread service to handle threads
   ) {}
   async followUser(userId: string, targetUsername: string): Promise<FollowTriggleResponseDto> {
     const user = await this.userService.findByIdWithPopulate(userId);
@@ -91,5 +94,81 @@ export class ActionService {
       })),
       followersCount: targetUser.followersCount,
     };
+  }
+
+  async likeThread(userId: string, threadId: string): Promise<ThreadResponseDto> {
+    const thread = await this.threadService.findById(threadId);
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+
+    const isLiked = thread.reactionBy.some(id => id.toString() === userId);
+    if (isLiked) {
+      // Unlike logic
+      thread.reactionBy = thread.reactionBy.filter(id => id.toString() !== userId);
+      thread.reactionNum = Math.max(0, thread.reactionNum - 1);
+    } else {
+      // Like logic
+      thread.reactionBy.push(new Types.ObjectId(userId));
+      thread.reactionNum += 1;
+
+      // Gửi thông báo like
+      // this.notificationService.createNotification({
+      //   senderUsername: (await this.userService.findById(userId)).username,
+      //   receiverUsername: (await this.userService.findById(thread.user.toString())).username,
+      //   type: 'LIKE',
+      //   content: 'notification_like',
+      //   threadId: threadId,
+      // });
+      this.notificationService.generateNotificationLike(
+        userId,
+        thread.user._id.toString(),
+        thread._id.toString(),
+      );
+    }
+
+    await thread.save();
+
+    // Trả về response chuẩn
+    return this.threadService.mapToThreadResponseDto(thread, userId);
+  }
+
+  async rethread(userId: string, threadId: string): Promise<ThreadResponseDto> {
+    const thread = await this.threadService.findById(threadId);
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+
+    const isReThreaded = thread.reThreadBy.some(id => id.toString() === userId);
+    if (isReThreaded) {
+      // Unrethread logic
+      thread.reThreadBy = thread.reThreadBy.filter(id => id.toString() !== userId);
+      thread.sharedNum = Math.max(0, thread.sharedNum - 1);
+    } else {
+      // Rethread logic
+      thread.reThreadBy.push(new Types.ObjectId(userId));
+      thread.sharedNum += 1;
+
+      // // Gửi thông báo rethread
+      // this.notificationService.createNotification({
+      //   senderUsername: (await this.userService.findById(userId)).username,
+      //   receiverUsername: (await this.userService.findById(thread.user.toString())).username,
+      //   type: 'REPOST',
+      //   content: 'notification_repost',
+      //   threadId: threadId,
+      // });
+      this.notificationService.generateNotificationRethread(
+        userId,
+        thread.user._id.toString(),
+        thread._id.toString(),
+      );
+    }
+
+    await thread.save();
+
+    // Trả về response chuẩn
+    const response = await this.threadService.mapToThreadResponseDto(thread, userId);
+    console.log('response', response);
+    return response;
   }
 }
