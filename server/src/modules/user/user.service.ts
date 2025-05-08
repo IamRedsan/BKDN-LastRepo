@@ -18,6 +18,7 @@ import { UpdateUserSettingRequestDto } from './dto/request/update-setting-reques
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { Socket } from 'socket.io';
+import { SimpleUserInfoResponseDto } from './dto/response/simple-user-info-response.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -289,5 +290,27 @@ export class UserService {
   // Lấy tất cả các client đang kết nối của người dùng
   getClientsForUser(username: string): Socket[] {
     return Array.from(this.clients.get(username) || []);
+  }
+
+  async searchUsers(query: string, currentUserId: string): Promise<SimpleUserInfoResponseDto[]> {
+    const users = await this.userModel
+      .find(
+        {
+          _id: { $ne: currentUserId },
+          $or: [
+            { username: { $regex: query, $options: 'i' } },
+            { name: { $regex: query, $options: 'i' } },
+          ],
+        },
+        { password: 0 },
+      )
+      .lean();
+    return users.map(user => ({
+      username: user.username,
+      name: user.name,
+      avatar: user.avatar,
+      bio: user.bio || null,
+      isFollowing: user.followers.some(follower => follower.toString() === currentUserId),
+    }));
   }
 }

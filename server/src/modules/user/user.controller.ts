@@ -11,6 +11,7 @@ import {
   Body,
   BadRequestException,
   Param,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
@@ -21,6 +22,7 @@ import { UpdateUserInfoRequestDto } from './dto/request/update-info-request.dto'
 import { UpdateUserSettingRequestDto } from './dto/request/update-setting-request.dto';
 import { ChangePasswordRequestDto } from './dto/request/change-password.dto';
 import { FollowTriggleResponseDto } from '../action/dto/response/follow-triggle-response.dto';
+import { SimpleUserInfoResponseDto } from './dto/response/simple-user-info-response.dto';
 
 @Controller('user')
 export class UserController {
@@ -101,5 +103,15 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async getFollowing(@Param('username') targetUsername: string): Promise<any[]> {
     return await this.userService.getFollowing(targetUsername);
+  }
+
+  @Get('/search')
+  @HttpCode(HttpStatus.OK)
+  async searchUsers(
+    @Req() req: Request,
+    @Query('query') query: string,
+  ): Promise<SimpleUserInfoResponseDto[]> {
+    const curentUserId = req.user._id; // Lấy username của người tìm kiếm
+    return this.userService.searchUsers(query, curentUserId);
   }
 }

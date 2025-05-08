@@ -13,17 +13,17 @@ import { useParams } from "next/navigation";
 import { IUser } from "@/interfaces/user";
 import { useGetProfile } from "@/hooks/api/use-user";
 import { ProfileSkeleton } from "@/components/loading/profile-skeleton";
-import { RootState } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setThreads } from "@/store/profile-thread-slice";
 import { setReThreads } from "@/store/profile-rethread-slice";
 import FollowDialog from "@/components/profile/follow-dialog";
 import { useFollowTrigger } from "@/hooks/api/use-action";
+import { setUsers } from "@/store/search-slice"; // import thêm action nếu chưa
 
 export default function ProfilePage() {
   const { username } = useParams();
   const { user, setUser } = useUserContext();
-  const dispatch = useDispatch();
   const [profile, setProfile] = useState<IUser | null>(() => {
     if (user?.username === username) {
       return user;
@@ -45,19 +45,31 @@ export default function ProfilePage() {
   const { data, error, isLoading } = useGetProfile(username as string);
   const { mutate: followTrigger, isPending: isFollowLoading } =
     useFollowTrigger();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleFollowToggle = async () => {
-    if (!profile) {
-      return;
-    }
+    if (!profile) return;
+
     followTrigger(profile.username, {
       onSuccess: (data) => {
+        // Cập nhật local user context
         if (user) {
           user.following = data.following;
           user.followingCount = data.followingCount;
           setUser(user);
           setIsFollowingProfile((prev) => !prev);
         }
+
+        // 🔄 Cập nhật store search nếu có user đó
+        dispatch((dispatch, getState) => {
+          const currentUsers = getState().search.users;
+          const updated = currentUsers.map((u) =>
+            u.username === profile.username
+              ? { ...u, isFollowing: !u.isFollowing }
+              : u
+          );
+          dispatch(setUsers(updated));
+        });
       },
     });
   };

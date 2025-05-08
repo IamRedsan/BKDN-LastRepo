@@ -48,3 +48,4 @@ export class Thread extends Document {
 }
 
 export const ThreadSchema = SchemaFactory.createForClass(Thread);
+ThreadSchema.index({ content: 1 });

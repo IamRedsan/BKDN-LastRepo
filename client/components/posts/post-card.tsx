@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import type React from 'react';
+import type React from "react";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Heart,
   MessageCircle,
@@ -12,23 +12,28 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useLanguage } from '@/components/language-provider';
-import ImageList from './image-list';
-import { IThread } from '@/interfaces/thread';
-import { useRouter } from 'next/navigation';
-import { useUserContext } from '@/contexts/userContext';
-import CreatePostDialog from './create-post-dialog';
-import DeletePostDialog from './delete-confirm-dialog';
-import { useFormatTime } from '@/utils/myFormatDistanceToNow';
-import { useLikeThread, useRethread } from '@/hooks/api/use-action';
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/components/language-provider";
+import ImageList from "./image-list";
+import { IThread } from "@/interfaces/thread";
+import { useRouter } from "next/navigation";
+import { useUserContext } from "@/contexts/userContext";
+import CreatePostDialog from "./create-post-dialog";
+import DeletePostDialog from "./delete-confirm-dialog";
+import { useFormatTime } from "@/utils/myFormatDistanceToNow";
+import { useLikeThread, useRethread } from "@/hooks/api/use-action";
+import { useDispatch } from "react-redux";
+import App from "next/app";
+import { AppDispatch } from "@/store";
+import { updateSearchThread } from "@/store/search-slice";
+import { updateReThread } from "@/store/profile-rethread-slice";
 
 interface PostCardProps {
   post: IThread;
@@ -41,7 +46,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [isTranslated, setIsTranslated] = useState(false);
   const [isLiked, setIsLiked] = useState(thread.isLiked);
   const [isReposted, setIsReposted] = useState(thread.isReThreaded);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const { user } = useUserContext();
   const isOwnPost = user?.username === thread.user.username;
@@ -49,6 +54,7 @@ export default function PostCard({ post }: PostCardProps) {
   const formattedDate = formatTimeToNow(new Date(thread.createdAt));
   const { mutate: likeThread, isPending: isLiking } = useLikeThread();
   const { mutate: repostThread, isPending: isReposting } = useRethread();
+  const dispatch = useDispatch<AppDispatch>();
   // const
   // Determine if post is in a different language than current UI
   // const isDifferentLanguage = post.language && post.language !== language;
@@ -76,25 +82,28 @@ export default function PostCard({ post }: PostCardProps) {
         // Update the thread's like count
         setIsLiked(!isLiked);
         setThread(data);
+        dispatch(updateSearchThread(data));
       },
       onError: (error) => {
-        console.error('Failed to like/unlike thread:', error);
+        console.error("Failed to like/unlike thread:", error);
       },
     });
   };
 
   const handleRepost = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Repost clicked');
+    console.log("Repost clicked");
     setIsReposted(!isReposted);
     repostThread(thread._id, {
       onSuccess: (data: IThread) => {
         // Update the thread's repost count
         setIsReposted(data.isReThreaded);
         setThread(data);
+        dispatch(updateSearchThread(data));
+        dispatch(updateReThread(data));
       },
       onError: (error) => {
-        console.error('Failed to repost/unrepost:', error);
+        console.error("Failed to repost/unrepost:", error);
       },
     });
   };
@@ -105,7 +114,7 @@ export default function PostCard({ post }: PostCardProps) {
         {/* Avatar */}
         <Link href={`/user/profile/${thread.user.username}`}>
           <Image
-            src={thread.user.avatar || '/placeholder.svg'}
+            src={thread.user.avatar || "/placeholder.svg"}
             alt={thread.user.name}
             width={40}
             height={40}
@@ -125,17 +134,17 @@ export default function PostCard({ post }: PostCardProps) {
                 {thread.user.name}
               </Link>
               <span className="text-muted-foreground">
-                {' '}
+                {" "}
                 @{thread.user.username}
               </span>
               <span className="text-muted-foreground text-sm">
-                {' '}
+                {" "}
                 · {formattedDate}
               </span>
               {thread.updatedAt !== thread.createdAt && (
                 <span className="text-muted-foreground text-xs">
-                  {' '}
-                  ({t('edit')})
+                  {" "}
+                  ({t("edit")})
                 </span>
               )}
             </div>
@@ -156,9 +165,9 @@ export default function PostCard({ post }: PostCardProps) {
                   </DropdownMenuItem>
                 )} */}
                 {thread.updatedAt && (
-                  <DropdownMenuItem>{t('viewEditHistory')}</DropdownMenuItem>
+                  <DropdownMenuItem>{t("viewEditHistory")}</DropdownMenuItem>
                 )}
-                <DropdownMenuItem>{t('reportContent')}</DropdownMenuItem>
+                <DropdownMenuItem>{t("reportContent")}</DropdownMenuItem>
                 {isOwnPost && (
                   <>
                     <CreatePostDialog
@@ -171,7 +180,7 @@ export default function PostCard({ post }: PostCardProps) {
                           }}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
-                          {t('edit')}
+                          {t("edit")}
                         </DropdownMenuItem>
                       }
                       initialThread={thread}
@@ -185,7 +194,7 @@ export default function PostCard({ post }: PostCardProps) {
                       className="text-destructive"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      {t('delete')}
+                      {t("delete")}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -246,10 +255,10 @@ export default function PostCard({ post }: PostCardProps) {
               variant="action"
               size="sm"
               className={`flex items-center space-x-1 ${
-                thread.isLiked ? 'text-red-500' : ''
+                thread.isLiked ? "text-red-500" : ""
               }`}
             >
-              <Heart size={18} className={`${isLiked ? 'fill-red-500' : ''}`} />
+              <Heart size={18} className={`${isLiked ? "fill-red-500" : ""}`} />
               <span>{thread.reactionNum}</span>
             </Button>
             <Button
@@ -265,14 +274,14 @@ export default function PostCard({ post }: PostCardProps) {
               variant="action"
               size="sm"
               className={`flex items-center space-x-1 ${
-                isReposted ? 'text-green-500' : ''
+                isReposted ? "text-green-500" : ""
               }`}
               onClick={handleRepost}
               disabled={isLiking || isReposting}
             >
               <Repeat
                 size={18}
-                className={isReposted ? 'fill-green-500' : ''}
+                className={isReposted ? "fill-green-500" : ""}
               />
               <span>{thread.sharedNum}</span>
             </Button>

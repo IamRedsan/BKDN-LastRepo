@@ -28,10 +28,11 @@ import { useCreateThread, useUpdateThread } from "@/hooks/api/use-thread";
 import { useToast } from "@/hooks/use-toast";
 import { useDispatch } from "react-redux";
 import { add } from "date-fns";
-import { addThread } from "@/store/profile-thread-slice";
+import { addThread, updateThread } from "@/store/profile-thread-slice";
 import { useUserContext } from "@/contexts/userContext";
 import { threadId } from "worker_threads";
 import { updateReThread } from "@/store/profile-rethread-slice";
+import { updateSearchThread } from "@/store/search-slice";
 
 interface CreatePostDialogProps {
   trigger: React.ReactNode;
@@ -118,7 +119,8 @@ export default function CreatePostDialog({
           },
           {
             onSuccess: (data) => {
-              dispatch(updateReThread(data));
+              dispatch(updateThread(data));
+              dispatch(updateSearchThread(data));
               toast({
                 title: t("success"),
                 description: t("post_updated"),

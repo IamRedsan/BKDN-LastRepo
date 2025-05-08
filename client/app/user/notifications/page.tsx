@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useCallback, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Heart,
   MessageCircle,
@@ -10,15 +10,15 @@ import {
   AlertTriangle,
   Bell,
   Loader2,
-} from 'lucide-react';
-import { useLanguage } from '@/components/language-provider';
-import { useNotification } from '@/contexts/notifContext';
-import { NotificationTypeEnum } from '@/enums/notification.enum';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFormatTime } from '@/utils/myFormatDistanceToNow';
+} from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
+import { useNotification } from "@/contexts/notifContext";
+import { NotificationTypeEnum } from "@/enums/notification.enum";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFormatTime } from "@/utils/myFormatDistanceToNow";
 
 export default function NotificationsPage() {
   const { t } = useLanguage();
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
         return <MessageCircle className="h-5 w-5 text-blue-500" />;
       case NotificationTypeEnum.REPOST:
         return <Repeat className="h-5 w-5 text-green-500" />;
-      case 'violation':
+      case "violation":
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case NotificationTypeEnum.FOLLOW:
         return <Bell className="h-5 w-5 text-purple-500" />;
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
         return (
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" />
         );
-      case 'violation':
+      case "violation":
         return (
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500" />
         );
@@ -130,21 +130,21 @@ export default function NotificationsPage() {
             </span>
           </>
         );
-      case 'violation':
-        return 'Your post has been flagged for violating our community guidelines';
+      case "violation":
+        return "Your post has been flagged for violating our community guidelines";
     }
   };
 
   const getNotificationTypeColor = (type: string) => {
     switch (type) {
       case NotificationTypeEnum.LIKE:
-        return 'bg-red-50 dark:bg-red-950/20';
+        return "bg-red-50 dark:bg-red-950/20";
       case NotificationTypeEnum.COMMENT:
-        return 'bg-blue-50 dark:bg-blue-950/20';
+        return "bg-blue-50 dark:bg-blue-950/20";
       case NotificationTypeEnum.REPOST:
-        return 'bg-green-50 dark:bg-green-950/20';
-      case 'violation':
-        return 'bg-yellow-50 dark:bg-yellow-950/20';
+        return "bg-green-50 dark:bg-green-950/20";
+      case "violation":
+        return "bg-yellow-50 dark:bg-yellow-950/20";
     }
   };
 
@@ -155,7 +155,7 @@ export default function NotificationsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-2xl font-bold">
-                {t('notifications')}
+                {t("notifications")}
               </CardTitle>
               {notReadCount > 0 && (
                 <Badge variant="destructive" className="rounded-full">
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
               onClick={readAllNotifications}
               className="text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
             >
-              {t('markAllAsRead')}
+              {t("markAllAsRead")}
             </Button>
           </div>
         </CardHeader>
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
             {notifications.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <Bell className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p>{t('noNotifications')}</p>
+                <p>{t("noNotifications")}</p>
               </div>
             ) : (
               <>
@@ -187,10 +187,10 @@ export default function NotificationsPage() {
                   <div
                     key={notification._id}
                     className={cn(
-                      'group relative flex items-start p-4 transition-all',
+                      "group relative flex items-start p-4 transition-all",
                       !notification.isRead
-                        ? 'bg-accent/30'
-                        : 'hover:bg-accent/10',
+                        ? "bg-accent/30"
+                        : "hover:bg-accent/10",
                       getNotificationTypeColor(notification.type)
                     )}
                     onClick={() => readNotification(index)}
@@ -208,7 +208,7 @@ export default function NotificationsPage() {
                         <Image
                           src={
                             notification.sender.avatar ||
-                            '/placeholder.svg?height=40&width=40'
+                            "/placeholder.svg?height=40&width=40"
                           }
                           alt={notification.sender.name}
                           width={40}
@@ -235,14 +235,14 @@ export default function NotificationsPage() {
 
                         <div className="mt-2 flex items-center gap-2">
                           <p className="text-xs text-muted-foreground">
-                            {formatTimeToNow(new Date(notification.createdAt))}
+                            {formatTimeToNow(new Date(notification.updatedAt))}
                           </p>
                           {notification.thread && (
                             <Link
                               href={`/user/thread/${notification.thread._id}`}
                               className="ml-auto text-xs font-medium text-primary hover:underline"
                             >
-                              {t('viewPost')}
+                              {t("viewPost")}
                             </Link>
                           )}
                         </div>
@@ -253,16 +253,16 @@ export default function NotificationsPage() {
                 <div
                   ref={loaderRef}
                   className={cn(
-                    'py-4 text-center transition-opacity duration-300',
-                    loading ? 'opacity-100' : 'opacity-0',
-                    !hasMore && 'hidden'
+                    "py-4 text-center transition-opacity duration-300",
+                    loading ? "opacity-100" : "opacity-0",
+                    !hasMore && "hidden"
                   )}
                 >
                   {loading && (
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       <p className="text-sm text-muted-foreground">
-                        {t('loadingMoreNotifications')}
+                        {t("loadingMoreNotifications")}
                       </p>
                     </div>
                   )}
@@ -270,7 +270,7 @@ export default function NotificationsPage() {
 
                 {!hasMore && notifications.length > 0 && (
                   <div className="py-4 text-center text-sm text-muted-foreground">
-                    <p>{t('noMoreNotifications')}</p>
+                    <p>{t("noMoreNotifications")}</p>
                   </div>
                 )}
               </>

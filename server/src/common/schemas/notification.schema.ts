@@ -32,9 +32,11 @@ export class Notification extends Document {
     type: String,
     enum: [
       'notification_like',
+      'notification_likes',
       'notification_follow',
       'notification_comment',
       'notification_repost',
+      'notification_reposts',
     ],
     default: 'notification_like',
   })
