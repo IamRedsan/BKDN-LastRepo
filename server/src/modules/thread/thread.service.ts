@@ -305,15 +305,20 @@ export class ThreadService {
     }
 
     // Cập nhật thread trong DB
-    const updatedThread = await this.threadModel.findByIdAndUpdate(
-      threadId,
-      {
-        content,
-        visibility,
-        media: updatedMedia,
-      },
-      { new: true },
-    );
+    const updatedThread = await this.threadModel
+      .findByIdAndUpdate(
+        threadId,
+        {
+          content,
+          visibility,
+          media: updatedMedia,
+        },
+        { new: true },
+      )
+      .populate({
+        path: 'user',
+        select: 'username name avatar', // Lấy thông tin user
+      });
 
     if (!updatedThread) {
       throw new NotFoundException('Thread not found');
@@ -371,6 +376,43 @@ export class ThreadService {
     const result = await Promise.all(
       threads.map(thread => this.mapToThreadResponseDto(thread, currentUser._id.toString())),
     );
+    return result;
+  }
+
+  async getFeedThreads(userId: string, lastCreatedAt?: Date): Promise<ThreadResponseDto[]> {
+    const limit = 4;
+    const friends = await this.userService.getFriends(userId);
+
+    // Điều kiện thời gian
+    const dateCondition = lastCreatedAt ? { createdAt: { $lt: lastCreatedAt } } : {};
+
+    // Kết hợp tất cả điều kiện vào một truy vấn duy nhất
+    const threads = await this.threadModel
+      .find({
+        ...dateCondition,
+        $or: [
+          { user: userId }, // Bài viết của chính user
+          {
+            user: { $in: friends },
+            visibility: { $in: [Visibility.PUBLIC, Visibility.FOLLOWER_ONLY] },
+          },
+          {
+            user: { $nin: [...friends, userId] },
+            visibility: Visibility.PUBLIC,
+          },
+        ],
+      })
+      .populate({
+        path: 'user',
+        select: 'username name avatar',
+      })
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    const result = await Promise.all(
+      threads.map(thread => this.mapToThreadResponseDto(thread, userId)),
+    );
+
     return result;
   }
 

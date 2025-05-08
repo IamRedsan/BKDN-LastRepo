@@ -4,16 +4,16 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-} from 'react';
-import { io } from 'socket.io-client';
-import { useUserContext } from './userContext';
-import { client } from '@/shared/axiosClient';
-import { INotification } from '@/interfaces/notification';
-import { NOTIFICATION_PAGE_LIMIT } from '@/constants/notification-page-limit';
+} from "react";
+import { io } from "socket.io-client";
+import { useUserContext } from "./userContext";
+import { client } from "@/shared/axiosClient";
+import { INotification } from "@/interfaces/notification";
+import { NOTIFICATION_PAGE_LIMIT } from "@/constants/notification-page-limit";
 import {
   useMarkNotificationAsRead,
   useMarkNotificationsAsRead,
-} from '@/hooks/api/use-notif';
+} from "@/hooks/api/use-notif";
 
 interface NotificationContextType {
   notifications: INotification[];
@@ -65,7 +65,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         );
       },
       onError: () => {
-        console.error('Failed to mark notification as read');
+        console.error("Failed to mark notification as read");
       },
     });
   };
@@ -88,7 +88,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         );
       },
       onError: () => {
-        console.error('Failed to mark all notifications as read');
+        console.error("Failed to mark all notifications as read");
       },
     });
   };
@@ -113,7 +113,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         setPage((prev) => prev + 1); // Tăng số trang
       }
     } catch (error) {
-      console.error('Failed to load more notifications:', error);
+      console.error("Failed to load more notifications:", error);
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         setHasMore(initialNotifications.length === limit); // Nếu số lượng trả về ít hơn `limit`, không còn thông báo để tải
         setPage(2); // Bắt đầu từ trang 2 cho lần tải tiếp theo
       } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+        console.error("Failed to fetch notifications:", error);
       } finally {
         setLoading(false);
       }
@@ -152,9 +152,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     const socket = io(`${process.env.NEXT_PUBLIC_SERVER_URL}`);
 
-    socket.emit('register', user.username);
-    socket.on('new_notification', (notification: INotification) => {
-      console.log('New notification received:', notification);
+    socket.emit("register", user.username);
+    socket.on("new_notification", (notification: INotification) => {
       setNotifications((prev) => {
         const existingIndex = prev.findIndex((n) => n._id === notification._id);
 
@@ -205,7 +204,7 @@ export const useNotification = (): NotificationContextType => {
   const context = useContext(NotificationContext);
   if (!context) {
     throw new Error(
-      'useNotification must be used within a NotificationProvider'
+      "useNotification must be used within a NotificationProvider"
     );
   }
   return context;

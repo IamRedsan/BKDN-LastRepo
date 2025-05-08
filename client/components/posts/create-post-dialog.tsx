@@ -27,18 +27,19 @@ import { IThread } from "@/interfaces/thread";
 import { useCreateThread, useUpdateThread } from "@/hooks/api/use-thread";
 import { useToast } from "@/hooks/use-toast";
 import { useDispatch } from "react-redux";
-import { add } from "date-fns";
 import { addThread, updateThread } from "@/store/profile-thread-slice";
 import { useUserContext } from "@/contexts/userContext";
-import { threadId } from "worker_threads";
-import { updateReThread } from "@/store/profile-rethread-slice";
 import { updateSearchThread } from "@/store/search-slice";
+import { updateFeedThread } from "@/store/feed-slice";
+import { AppDispatch } from "@/store";
+import { updateReThread } from "@/store/profile-rethread-slice";
 
 interface CreatePostDialogProps {
   trigger: React.ReactNode;
   initialThread?: IThread;
   isEditing?: boolean;
   setIsDropdownOpen?: (isOpen: boolean) => void;
+  onUpdateThread?: (updatedThread: IThread) => void; // New callback prop
 }
 
 export default function CreatePostDialog({
@@ -46,6 +47,7 @@ export default function CreatePostDialog({
   initialThread,
   isEditing = false,
   setIsDropdownOpen = () => {},
+  onUpdateThread = () => {}, // Default to no-op
 }: CreatePostDialogProps) {
   const [content, setContent] = useState(initialThread?.content || "");
   const [images, setImages] = useState<(File | { url: string })[]>(
@@ -58,18 +60,11 @@ export default function CreatePostDialog({
   const [open, setOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useLanguage();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   const { user } = useUserContext();
   const { mutate: createThread, isPending } = useCreateThread();
   const { mutate: editThread, isPending: isUpdatePending } = useUpdateThread();
-
-  // Update state when props change (useful for edit mode)
-  // useEffect(() => {
-  //   if (initialContent) setContent(initialContent);
-  //   if (initialImages && initialImages.length > 0) setImages(initialImages);
-  //   if (initialPrivacy) setPrivacy(initialPrivacy);
-  // }, [initialContent, initialImages, initialPrivacy]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -118,9 +113,12 @@ export default function CreatePostDialog({
             parentThreadId: initialThread?.parentThreadId || null,
           },
           {
-            onSuccess: (data) => {
-              dispatch(updateThread(data));
+            onSuccess: (data: IThread) => {
               dispatch(updateSearchThread(data));
+              dispatch(updateReThread(data));
+              dispatch(updateThread(data));
+              dispatch(updateFeedThread(data));
+              onUpdateThread(data); // Notify parent component
               toast({
                 title: t("success"),
                 description: t("post_updated"),
@@ -235,7 +233,7 @@ export default function CreatePostDialog({
             />
             <div className="flex-1 space-y-4">
               <Textarea
-                placeholder={`${t("post")} something...`}
+                placeholder={`${t("post_something")}`}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={4}

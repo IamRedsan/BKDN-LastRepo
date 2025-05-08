@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { client } from "@/shared/axiosClient";
 import { IThread } from "@/interfaces/thread";
@@ -20,7 +20,7 @@ export const useGetThreadDetail = (threadId: string) => {
       return response.data;
     },
     enabled: !!threadId, // Only fetch if threadId exists
-    staleTime: 1000 * 60 * 1,
+    staleTime: 0,
   });
 };
 
@@ -122,5 +122,25 @@ export const useDeleteThread = () => {
         queryKey: ["userProfile", user!.username],
       });
     },
+  });
+};
+
+export const useGetFeedThreads = () => {
+  return useInfiniteQuery<IThread[], AxiosError>({
+    queryKey: ["feedThreads"],
+    queryFn: async ({ pageParam }) => {
+      const response = await client.get(`/thread/feed`, {
+        params: { lastCreatedAt: pageParam || null }, // Pass `null` if `pageParam` doesn't exist
+      });
+      return response.data;
+    },
+    getNextPageParam: (lastPage) => {
+      // Get `createdAt` of the last post in the current page
+      return lastPage?.length > 0
+        ? lastPage[lastPage.length - 1].createdAt
+        : undefined;
+    },
+    initialPageParam: null, // Set the initial page parameter
+    staleTime: 0, // 1 minute
   });
 };

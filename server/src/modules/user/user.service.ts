@@ -313,4 +313,14 @@ export class UserService {
       isFollowing: user.followers.some(follower => follower.toString() === currentUserId),
     }));
   }
+
+  async getFriends(userId: string): Promise<string[]> {
+    const user = await this.userModel.findById(userId).populate('following', '_id');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Extract the IDs of the friends (users the current user is following)
+    return user.following.map((friend: any) => friend._id.toString());
+  }
 }
