@@ -47,11 +47,9 @@ const searchSlice = createSlice({
       state.threads = action.payload;
     },
     updateSearchThread(state, action: PayloadAction<IThread>) {
-      const updated = action.payload;
-      const index = state.threads.findIndex((t) => t._id === updated._id);
-      if (index !== -1) {
-        state.threads[index] = updated;
-      }
+      state.threads = state.threads.map((thread) =>
+        thread._id === action.payload._id ? action.payload : thread
+      );
     },
     deleteSearchThread(state, action: PayloadAction<string>) {
       const threadId = action.payload;

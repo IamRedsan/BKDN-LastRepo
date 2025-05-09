@@ -34,6 +34,8 @@ import App from "next/app";
 import { AppDispatch } from "@/store";
 import { updateSearchThread } from "@/store/search-slice";
 import { updateReThread } from "@/store/profile-rethread-slice";
+import { updateThread } from "@/store/profile-thread-slice";
+import { updateFeedThread } from "@/store/feed-slice";
 
 interface PostCardProps {
   post: IThread;
@@ -83,6 +85,9 @@ export default function PostCard({ post }: PostCardProps) {
         setIsLiked(!isLiked);
         setThread(data);
         dispatch(updateSearchThread(data));
+        dispatch(updateReThread(data));
+        dispatch(updateThread(data));
+        dispatch(updateFeedThread(data));
       },
       onError: (error) => {
         console.error("Failed to like/unlike thread:", error);
@@ -92,7 +97,6 @@ export default function PostCard({ post }: PostCardProps) {
 
   const handleRepost = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Repost clicked");
     setIsReposted(!isReposted);
     repostThread(thread._id, {
       onSuccess: (data: IThread) => {
@@ -101,6 +105,8 @@ export default function PostCard({ post }: PostCardProps) {
         setThread(data);
         dispatch(updateSearchThread(data));
         dispatch(updateReThread(data));
+        dispatch(updateThread(data));
+        dispatch(updateFeedThread(data));
       },
       onError: (error) => {
         console.error("Failed to repost/unrepost:", error);
@@ -186,6 +192,9 @@ export default function PostCard({ post }: PostCardProps) {
                       initialThread={thread}
                       isEditing={true}
                       setIsDropdownOpen={setIsDropdownOpen}
+                      onUpdateThread={(updatedThread) =>
+                        setThread(updatedThread)
+                      } // Update thread state
                     />
 
                     <DropdownMenuItem

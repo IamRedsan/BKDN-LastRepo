@@ -118,6 +118,6 @@ export const useGetProfile = (username: string) => {
       const response = await client.get(`/profile/${username}`);
       return response.data;
     },
-    staleTime: 1000 * 60 * 1, // Thời gian dữ liệu được coi là mới
+    staleTime: 0, // Thời gian dữ liệu được coi là mới
   });
 };
