@@ -16,6 +16,7 @@ import { OpenAIService } from './modules/openai/openai.service';
 import { RekognitionModule } from './modules/rekognition/rekognition.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ActionModule } from './modules/action/action.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ActionModule } from './modules/action/action.module';
     RekognitionModule,
     NotificationModule,
     ActionModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, OpenAIService],
