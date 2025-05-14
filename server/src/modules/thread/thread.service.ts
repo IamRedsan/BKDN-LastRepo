@@ -26,7 +26,9 @@ export class ThreadService {
 
   async findReportedThreads(minReports: number) {
     return this.threadModel
-      .find({ reportedNum: { $gte: minReports } })
+      .find({
+        $or: [{ reportedNum: { $gte: minReports } }, { status: { $in: ['PENDING', 'HIDE'] } }],
+      })
       .populate('user', 'username name avatar') // Lấy thông tin user liên quan
       .exec();
   }

@@ -162,4 +162,24 @@ export class ActionService {
     const response = await this.threadService.mapToThreadResponseDto(thread, userId);
     return response;
   }
+
+  async reportThread(threadId: string, reporterId: string): Promise<boolean> {
+    // Check if the reporter is a fake user
+    const reporter = await this.userService.findById(reporterId);
+    if (!reporter) {
+      return false;
+    }
+
+    // Find the thread by ID
+    const thread = await this.threadService.findById(threadId);
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+
+    // Increment the reportedNum of the thread
+    thread.reportedNum = (thread.reportedNum || 0) + 1;
+    await thread.save();
+
+    return true;
+  }
 }

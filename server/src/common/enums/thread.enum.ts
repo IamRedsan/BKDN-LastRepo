@@ -1,7 +1,6 @@
 export enum Status {
   CREATING = 'CREATING',
   CREATE_DONE = 'CREATE_DONE',
-  PENDING = 'PENDING',
   HIDE = 'HIDE',
 }
 

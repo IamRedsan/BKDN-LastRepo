@@ -1,19 +1,17 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AdminController } from './admin.controller';
-import { UserService } from '../user/user.service';
-import { ThreadService } from '../thread/thread.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '../../common/schemas/user.schema';
-import { Thread, ThreadSchema } from '../../common/schemas/thread.schema';
+import { AdminService } from './admin.service';
+import { UserModule } from '../user/user.module';
+import { ThreadModule } from '../thread/thread.module';
+import { AuthMiddleware } from 'src/common/middlewares/auth.middleware';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
-      { name: Thread.name, schema: ThreadSchema },
-    ]),
-  ],
+  imports: [UserModule, ThreadModule],
   controllers: [AdminController],
-  providers: [UserService, ThreadService],
+  providers: [AdminService],
 })
-export class AdminModule {}
+export class AdminModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(AdminController);
+  }
+}

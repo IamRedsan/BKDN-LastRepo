@@ -82,11 +82,19 @@ export default function LoginPage() {
       }
 
       if (event.data.success) {
-        router.push('/user');
-        toast({
-          title: t('success'),
-          description: t('googleLoginSuccess'),
-        });
+        if (event.data.role === Role.ADMIN) {
+          router.push('/admin');
+          toast({
+            title: t('success'),
+            description: t('googleLoginSuccess'),
+          });
+        } else {
+          router.push('/user');
+          toast({
+            title: t('success'),
+            description: t('googleLoginSuccess'),
+          });
+        }
       } else {
         toast({
           title: t('error'),

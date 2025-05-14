@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Ban,
   CheckCircle,
@@ -22,8 +22,8 @@ import {
   Moon,
   Sun,
   Monitor,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -31,17 +31,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { mockUsers } from "@/lib/mock-data";
-import { Theme } from "@/enums/Theme";
-import { Language } from "@/enums/Language";
-import { Role } from "@/enums/Role";
+} from '@/components/ui/dialog';
+import { Theme } from '@/enums/Theme';
+import { Language } from '@/enums/Language';
+import { Role } from '@/enums/Role';
+import { useLanguage } from '@/components/language-provider';
+import { useAdminUsers } from '@/hooks/api/use-admin';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(mockUsers);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { data: users = [], isLoading } = useAdminUsers();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   // Filter users based on search query
   const filteredUsers = users.filter(
@@ -52,15 +54,13 @@ export default function UsersPage() {
   );
 
   const handleBanUser = (username: string) => {
-    setUsers(
-      users.map((user) =>
-        user.username === username
-          ? { ...user, isBanned: !user.isBanned }
-          : user
-      )
-    );
+    // Update logic for banning/unbanning users will go here
     setBanDialogOpen(false);
   };
+
+  if (isLoading) {
+    return <div>{t('loading')}</div>;
+  }
 
   const getThemeIcon = (theme: Theme) => {
     switch (theme) {
@@ -82,21 +82,21 @@ export default function UsersPage() {
   const getRoleBadge = (role: Role) => {
     return role === Role.ADMIN ? (
       <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
-        Admin
+        {t('admin')}
       </Badge>
     ) : (
-      <Badge variant="outline">User</Badge>
+      <Badge variant="outline">{t('user')}</Badge>
     );
   };
 
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl font-bold">{t('userManagement')}</h1>
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder={t('search')}
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -108,13 +108,13 @@ export default function UsersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Followers</TableHead>
-              <TableHead>Preferences</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('user')}</TableHead>
+              <TableHead>{t('email')}</TableHead>
+              <TableHead>{t('role')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>{t('followers')}</TableHead>
+              <TableHead>{t('preferences')}</TableHead>
+              <TableHead>{t('action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,7 +123,7 @@ export default function UsersPage() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Image
-                      src={user.avatar || "/placeholder.svg"}
+                      src={user.avatar || '/placeholder.svg'}
                       alt={user.name}
                       width={32}
                       height={32}
@@ -143,11 +143,7 @@ export default function UsersPage() {
                   {user.isBanned ? (
                     <Badge variant="destructive">Banned</Badge>
                   ) : (
-                    <Badge
-                      variant={user.status === "ACTIVE" ? "success" : "outline"}
-                    >
-                      {user.status}
-                    </Badge>
+                    <Badge variant="success">{t('active')}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
@@ -183,11 +179,11 @@ export default function UsersPage() {
                     >
                       <Button variant="outline" size="sm">
                         <ExternalLink className="h-4 w-4 mr-1" />
-                        Profile
+                        {t('profile')}
                       </Button>
                     </Link>
                     <Button
-                      variant={user.isBanned ? "outline" : "destructive"}
+                      variant={user.isBanned ? 'outline' : 'destructive'}
                       size="sm"
                       onClick={() => {
                         setSelectedUser(user);
@@ -197,12 +193,12 @@ export default function UsersPage() {
                       {user.isBanned ? (
                         <>
                           <CheckCircle className="h-4 w-4 mr-1" />
-                          Unban
+                          {t('unban')}
                         </>
                       ) : (
                         <>
                           <Ban className="h-4 w-4 mr-1" />
-                          Ban
+                          {t('ban')}
                         </>
                       )}
                     </Button>
@@ -219,7 +215,7 @@ export default function UsersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedUser?.isBanned ? "Unban User" : "Ban User"}
+              {selectedUser?.isBanned ? 'Unban User' : 'Ban User'}
             </DialogTitle>
             <DialogDescription>
               {selectedUser?.isBanned
@@ -232,10 +228,10 @@ export default function UsersPage() {
               Cancel
             </Button>
             <Button
-              variant={selectedUser?.isBanned ? "default" : "destructive"}
+              variant={selectedUser?.isBanned ? 'default' : 'destructive'}
               onClick={() => handleBanUser(selectedUser?.username)}
             >
-              {selectedUser?.isBanned ? "Unban User" : "Ban User"}
+              {selectedUser?.isBanned ? 'Unban User' : 'Ban User'}
             </Button>
           </DialogFooter>
         </DialogContent>
