@@ -49,6 +49,10 @@ export class UserService {
     return user;
   }
 
+  async findAllUsers() {
+    return this.userModel.find({}, { password: 0 }).exec(); // Loại bỏ trường password
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email });
   }

@@ -45,6 +45,9 @@ export class Thread extends Document {
 
   @Prop({ type: [MediaSchema], default: [] })
   media: Media[];
+
+  @Prop({ default: 0 })
+  reportedNum: number;
 }
 
 export const ThreadSchema = SchemaFactory.createForClass(Thread);

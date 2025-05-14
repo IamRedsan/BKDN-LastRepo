@@ -24,6 +24,13 @@ export class ThreadService {
     private readonly cloudinaryService: CloudinaryService, // Thay thế bằng dịch vụ Cloudinary thực tế
   ) {}
 
+  async findReportedThreads(minReports: number) {
+    return this.threadModel
+      .find({ reportedNum: { $gte: minReports } })
+      .populate('user', 'username name avatar') // Lấy thông tin user liên quan
+      .exec();
+  }
+
   async findById(threadId: string): Promise<any | null> {
     const thread = await this.threadModel.findById(threadId).populate({
       path: 'user',

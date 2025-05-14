@@ -20,6 +20,7 @@ export interface IThread {
   reactionNum: number; // Số lượt phản ứng
   sharedNum: number; // Số lần chia sẻ
   commentNum: number; // Số bình luận
+  reportedNum: number; // Số lần báo cáo
   isLiked: boolean; // Trạng thái đã thích hay chưa
   isReThreaded: boolean; // Trạng thái đã re-thread hay chưa
   reactionBy: string[]; // Mảng các ObjectId người dùng đã phản ứng

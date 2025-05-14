@@ -25,6 +25,7 @@ export interface IUser {
   }[];
   followersCount: number;
   followingCount: number;
+  isBanned: boolean;
   theme: Theme;
   language: Language;
   createdAt: Date;
