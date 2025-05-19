@@ -327,4 +327,17 @@ export class UserService {
     // Extract the IDs of the friends (users the current user is following)
     return user.following.map((friend: any) => friend._id.toString());
   }
+
+  async banUser(username: string): Promise<Partial<User>> {
+    const user = await this.userModel.findOne({ username: username }); // Tìm user bằng MongoDB
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isBanned = !user.isBanned; // Cập nhật trạng thái isBanned
+    await user.save(); // Lưu thay đổi vào database
+
+    const { password, ...userWithoutPassword } = user.toObject(); // Loại bỏ password trước khi trả về
+    return userWithoutPassword;
+  }
 }

@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Thread } from 'src/common/schemas/thread.schema';
 import { UserService } from '../user/user.service';
-import { Visibility } from 'src/common/enums/thread.enum';
+import { Status, Visibility } from 'src/common/enums/thread.enum';
 import { ThreadResponseDto } from './dto/thread-response.dto';
 import { ThreadDetailResponseDto } from './dto/thread-detail-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -422,6 +422,44 @@ export class ThreadService {
       threads.map(thread => this.mapToThreadResponseDto(thread, userId)),
     );
 
+    return result;
+  }
+
+  async banThreadAndUser(threadId: string): Promise<ThreadResponseDto> {
+    // Tìm thread theo ID
+    const thread = await this.threadModel.findById(threadId);
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+
+    // Cập nhật trạng thái thread thành HIDE
+    thread.status = Status.HIDE;
+    await thread.save();
+
+    // Ban user chủ thread
+    const user = await this.userService.findById(thread.user.toString());
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isBanned = true;
+    await user.save();
+    const result = await this.mapToThreadResponseDto(thread, user._id.toString());
+    return result;
+  }
+
+  async approveThread(threadId: string): Promise<ThreadResponseDto> {
+    // Tìm thread theo ID
+    const thread = await this.threadModel.findById(threadId);
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+    // Cập nhật trạng thái thread thành APPROVED
+    thread.status = Status.CREATE_DONE;
+    thread.reportedNum = 0; // Đặt lại số lượng báo cáo về 0
+    await thread.save();
+    // Trả về thread đã được phê duyệt
+    const result = await this.mapToThreadResponseDto(thread, thread.user.toString());
     return result;
   }
 

@@ -14,6 +14,8 @@ import { ThreadService } from '../thread/thread.service';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { User } from 'src/common/schemas/user.schema';
+import { ThreadResponseDto } from '../thread/dto/thread-response.dto';
 
 @Controller('admin')
 @UseGuards(RolesGuard)
@@ -29,12 +31,12 @@ export class AdminController {
     return this.userService.findAllUsers();
   }
 
-  // @Post('users/ban/:userId')
-  // @HttpCode(HttpStatus.OK)
-  // @Roles(UserRole.ADMIN)
-  // async banUser(@Param('userId') userId: string, @Body('ban') ban: boolean) {
-  //   return this.userService.banUser(userId, ban);
-  // }
+  @Post('users/ban/:username')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  async banUser(@Param('username') username: string) {
+    return this.userService.banUser(username);
+  }
 
   @Get('threads/reported')
   @Roles(UserRole.ADMIN)
@@ -42,17 +44,17 @@ export class AdminController {
     return this.threadService.findReportedThreads(minReports);
   }
 
-  // @Post('threads/approve/:threadId')
-  // @HttpCode(HttpStatus.OK)
-  // @Roles(UserRole.ADMIN)
-  // async approveThread(@Param('threadId') threadId: string) {
-  //   return this.threadService.approveThread(threadId);
-  // }
+  @Post('threads/approve/:threadId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  async approveThread(@Param('threadId') threadId: string): Promise<ThreadResponseDto> {
+    return this.threadService.approveThread(threadId);
+  }
 
-  // @Post('threads/ban/:threadId')
-  // @HttpCode(HttpStatus.OK)
-  // @Roles(UserRole.ADMIN)
-  // async banThread(@Param('threadId') threadId: string) {
-  //   return this.threadService.banThreadAndUser(threadId);
-  // }
+  @Post('threads/ban/:threadId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  async banThread(@Param('threadId') threadId: string): Promise<ThreadResponseDto> {
+    return this.threadService.banThreadAndUser(threadId);
+  }
 }

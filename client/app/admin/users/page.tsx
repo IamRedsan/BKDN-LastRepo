@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -36,16 +36,24 @@ import { Theme } from '@/enums/Theme';
 import { Language } from '@/enums/Language';
 import { Role } from '@/enums/Role';
 import { useLanguage } from '@/components/language-provider';
-import { useAdminUsers } from '@/hooks/api/use-admin';
+import { useAdminBanUser, useAdminUsers } from '@/hooks/api/use-admin';
+import { IUser } from '@/interfaces/user';
 
 export default function UsersPage() {
-  const { data: users = [], isLoading } = useAdminUsers();
+  const { data: usersInitial, isLoading } = useAdminUsers();
+  const [users, setUsers] = useState<IUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const { t } = useLanguage();
+  const { mutate: banUser, isPending } = useAdminBanUser();
 
-  // Filter users based on search query
+  useEffect(() => {
+    if (usersInitial) {
+      setUsers(usersInitial);
+    }
+  }, [usersInitial]);
+
   const filteredUsers = users.filter(
     (user) =>
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,13 +62,17 @@ export default function UsersPage() {
   );
 
   const handleBanUser = (username: string) => {
-    // Update logic for banning/unbanning users will go here
+    banUser(username, {
+      onSuccess: (data: IUser) => {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.username === data.username ? { ...user, ...data } : user
+          )
+        );
+      },
+    });
     setBanDialogOpen(false);
   };
-
-  if (isLoading) {
-    return <div>{t('loading')}</div>;
-  }
 
   const getThemeIcon = (theme: Theme) => {
     switch (theme) {
@@ -75,19 +87,20 @@ export default function UsersPage() {
     }
   };
 
-  const getLanguageIcon = (language: Language) => {
-    return <Globe className="h-4 w-4" />;
-  };
+  const getLanguageIcon = (_: Language) => <Globe className="h-4 w-4" />;
 
-  const getRoleBadge = (role: Role) => {
-    return role === Role.ADMIN ? (
+  const getRoleBadge = (role: Role) =>
+    role === Role.ADMIN ? (
       <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
         {t('admin')}
       </Badge>
     ) : (
       <Badge variant="outline">{t('user')}</Badge>
     );
-  };
+
+  if (isLoading) {
+    return <div>{t('loading')}</div>;
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -148,9 +161,11 @@ export default function UsersPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span>{user.followersCount} followers</span>
+                    <span>
+                      {user.followersCount} {t('followers')}
+                    </span>
                     <span className="text-sm text-muted-foreground">
-                      {user.followingCount} following
+                      {user.followingCount} {t('following')}
                     </span>
                   </div>
                 </TableCell>
@@ -177,7 +192,7 @@ export default function UsersPage() {
                       href={`/user/profile/${user.username}`}
                       target="_blank"
                     >
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" disabled={isPending}>
                         <ExternalLink className="h-4 w-4 mr-1" />
                         {t('profile')}
                       </Button>
@@ -189,6 +204,7 @@ export default function UsersPage() {
                         setSelectedUser(user);
                         setBanDialogOpen(true);
                       }}
+                      disabled={isPending}
                     >
                       {user.isBanned ? (
                         <>
@@ -210,28 +226,27 @@ export default function UsersPage() {
         </Table>
       </div>
 
-      {/* Ban/Unban Confirmation Dialog */}
       <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedUser?.isBanned ? 'Unban User' : 'Ban User'}
+              {selectedUser?.isBanned ? t('unbanUser') : t('banUser')}
             </DialogTitle>
             <DialogDescription>
               {selectedUser?.isBanned
-                ? `Are you sure you want to unban ${selectedUser?.username}?`
-                : `Are you sure you want to ban ${selectedUser?.username}? This will prevent them from accessing the platform.`}
+                ? `${t('banUserConfirmation')} ${selectedUser?.username}`
+                : `${t('unbanUserConfirmation')} ${selectedUser?.username}`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               variant={selectedUser?.isBanned ? 'default' : 'destructive'}
-              onClick={() => handleBanUser(selectedUser?.username)}
+              onClick={() => handleBanUser(selectedUser?.username || '')}
             >
-              {selectedUser?.isBanned ? 'Unban User' : 'Ban User'}
+              {selectedUser?.isBanned ? t('unban') : t('ban')}
             </Button>
           </DialogFooter>
         </DialogContent>

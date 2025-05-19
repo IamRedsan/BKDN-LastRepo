@@ -41,7 +41,11 @@ import { IThread } from '@/interfaces/thread';
 import { Status, Visibility } from '@/enums/ThreadEnum';
 import PostCard from '@/components/posts/post-card';
 import { useLanguage } from '@/components/language-provider';
-import { useReportedThreads } from '@/hooks/api/use-admin';
+import {
+  useAdminApproveThread,
+  useAdminBanThread,
+  useReportedThreads,
+} from '@/hooks/api/use-admin';
 import { useFormatTime } from '@/utils/myFormatDistanceToNow';
 
 export default function ReportsPage() {
@@ -57,6 +61,9 @@ export default function ReportsPage() {
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'ban' | 'approve'>('ban');
   const { formatTimeToNow } = useFormatTime();
+  const { mutate: banThread, isPending: isBanLoading } = useAdminBanThread();
+  const { mutate: approveThread, isPending: isApproveLoading } =
+    useAdminApproveThread();
 
   // Filter threads based on search query, status, and report count
   const filteredThreads = threads.filter((thread) => {
@@ -91,18 +98,32 @@ export default function ReportsPage() {
     (a, b) => b.reportedNum - a.reportedNum
   );
 
-  const handleAction = (threadId: string, action: 'ban' | 'approve') => {
-    setThreads(
-      threads.map((thread) =>
-        thread._id === threadId
-          ? {
-              ...thread,
-              status: action === 'ban' ? Status.HIDE : Status.CREATE_DONE,
-            }
-          : thread
-      )
-    );
-    setActionDialogOpen(false);
+  const handleAction = () => {
+    if (!selectedThread) return;
+
+    if (actionType === 'ban') {
+      banThread(selectedThread._id, {
+        onSuccess: (updatedThread) => {
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread._id === updatedThread._id ? updatedThread : thread
+            )
+          );
+          setActionDialogOpen(false);
+        },
+      });
+    } else if (actionType === 'approve') {
+      approveThread(selectedThread._id, {
+        onSuccess: (updatedThread) => {
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread._id === updatedThread._id ? updatedThread : thread
+            )
+          );
+          setActionDialogOpen(false);
+        },
+      });
+    }
   };
 
   const getStatusBadge = (status: Status) => {
@@ -375,9 +396,7 @@ export default function ReportsPage() {
             </Button>
             <Button
               variant={actionType === 'ban' ? 'destructive' : 'default'}
-              onClick={() =>
-                handleAction(selectedThread?._id || '', actionType)
-              }
+              onClick={handleAction}
             >
               {actionType === 'ban' ? t('banPost') : t('approvePost')}
             </Button>

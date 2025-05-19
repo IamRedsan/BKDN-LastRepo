@@ -212,6 +212,10 @@ const translations = {
     approvePostConfirmation: 'Are you sure you want to approve this post?',
     viewReportedPost: 'View Reported Post',
     close: 'Close',
+    banUser: 'Ban User',
+    unbanUser: 'Unban User',
+    banUserConfirmation: 'Are you sure you want to ban this user?',
+    unbanUserConfirmation: 'Are you sure you want to unban this user?',
   },
   vi: {
     user: 'Người dùng',
@@ -413,6 +417,10 @@ const translations = {
       'Bạn có chắc chắn muốn phê duyệt bài viết này không?',
     viewReportedPost: 'Xem bài viết đã báo cáo',
     close: 'Đóng',
+    banUser: 'Cấm người dùng',
+    unbanUser: 'Bỏ cấm người dùng',
+    banUserConfirmation: 'Bạn có chắc chắn muốn cấm người dùng này không?',
+    unbanUserConfirmation: 'Bạn có chắc chắn muốn bỏ cấm người dùng này không?',
   },
   ja: {
     user: 'ユーザー',
@@ -612,6 +620,10 @@ const translations = {
     approvePostConfirmation: 'この投稿を承認してもよろしいですか?',
     viewReportedPost: '報告された投稿を表示',
     close: '閉じる',
+    banUser: 'ユーザーを禁止',
+    unbanUser: 'ユーザーの禁止を解除',
+    banUserConfirmation: 'このユーザーを禁止してもよろしいですか?',
+    unbanUserConfirmation: 'このユーザーの禁止を解除してもよろしいですか?',
   },
 };
 
