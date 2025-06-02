@@ -1,5 +1,4 @@
 export enum Status {
-  CREATING = 'CREATING',
   CREATE_DONE = 'CREATE_DONE',
   HIDE = 'HIDE',
 }

@@ -75,8 +75,6 @@ export default function ReportsPage() {
     // Status filter
     const matchesStatus =
       statusFilter === 'all' ||
-      (statusFilter === 'pending' && thread.status === Status.PENDING) ||
-      (statusFilter === 'approved' && thread.status === Status.CREATING) ||
       (statusFilter === 'banned' && thread.status === Status.HIDE);
 
     // Report count filter
@@ -128,18 +126,6 @@ export default function ReportsPage() {
 
   const getStatusBadge = (status: Status) => {
     switch (status) {
-      case Status.PENDING:
-        return (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> {t('pendingReview')}
-          </Badge>
-        );
-      case Status.CREATING:
-        return (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" /> {t('creating')}
-          </Badge>
-        );
       case Status.CREATE_DONE:
         return (
           <Badge variant="success" className="flex items-center gap-1">

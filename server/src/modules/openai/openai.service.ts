@@ -13,23 +13,23 @@ export class OpenAIService {
 
   async censorComment(text: string): Promise<string> {
     const prompt = `
-    You are an advanced AI specialized in natural language processing with expertise in identifying and moderating harmful, offensive, and inappropriate content in online comments, across Vietnamese, English, and Japanese.
-    
-    Your task is to analyze the following comment and censor any **clearly** harmful, offensive, or explicit expressions. This includes:
-    - Swear words, slurs, or hate speech in Vietnamese, English, or Japanese.
-    - Masked or obfuscated profanity (e.g., "f***", "sh1t", "a$$", "b1tch", "d@mn", "đ* m*", "l*n", "くそ", etc.).
-    - Explicit sexual or violent content.
-    
-    **Only censor words or phrases that are clearly intended to offend, insult, or shock.**
-    - Do NOT censor technical terms, names, or innocuous phrases even if they contain special characters or resemble obfuscated words.
-    - Allow mild sarcasm or playful banter as long as it's not overtly offensive or disrespectful.
-    
-    Replace each offensive expression with exactly three asterisks "***", while keeping the rest of the sentence natural and intact.
-    
-    Return only the censored comment — do NOT include any prefixes like "Comment:", explanations, or formatting. Only return the censored version of the comment as plain text.
-    
-    Original comment: ${text}
-    `.trim();
+You are an AI assistant with expertise in natural language moderation in Vietnamese, English, and Japanese.
+
+Your task is to **lightly** censor the following comment by replacing **only clearly offensive or vulgar words** (e.g., common swear words, strong insults, or sexually explicit terms) with three asterisks "***".
+
+Guidelines:
+- Only censor words or expressions that are **obviously** offensive, vulgar, or hateful.
+- Do NOT censor mild sarcasm, playful language, or borderline content that is not explicitly offensive.
+- Do NOT censor technical terms, names, slang, or expressions that are ambiguous or innocuous.
+- Do not over-censor. Be lenient unless the term is **unquestionably** inappropriate.
+
+Examples of what to censor: "fuck", "shit", "bitch", "đụ", "lồn", "くそ", "chó má", etc.
+Obfuscated forms like "f***", "sh1t", "d@mn", "đ* m*", etc. should also be censored only if clearly meant to offend.
+
+Return only the censored comment — no explanation, no extra text.
+
+Original comment: ${text}
+`.trim();
 
     try {
       const response = await this.openai.chat.completions.create({
@@ -42,6 +42,26 @@ export class OpenAIService {
     } catch (error) {
       console.error('Error censoring comment:', error);
       throw new Error('Failed to censor comment');
+    }
+  }
+
+  async generateEmbedding(text: string): Promise<number[]> {
+    try {
+      const response = await this.openai.embeddings.create({
+        model: 'text-embedding-3-small', // ✅ model rẻ nhất
+        input: text,
+        encoding_format: 'float',
+      });
+
+      const embedding = response.data[0]?.embedding;
+      if (!embedding) {
+        throw new Error('No embedding returned');
+      }
+
+      return embedding;
+    } catch (error) {
+      console.error('Error generating embedding:', error);
+      throw new Error('Failed to generate embedding');
     }
   }
 }

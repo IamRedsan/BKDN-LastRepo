@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers } from '@/lib/mock-data';
 import { Loader2, User, Lock, Palette, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { IUser } from '@/interfaces/user';

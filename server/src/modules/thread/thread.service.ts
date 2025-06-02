@@ -15,19 +15,24 @@ import { ThreadDetailResponseDto } from './dto/thread-detail-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UploadApiResponse } from 'cloudinary';
 import { Media } from 'src/common/schemas/media.schema';
+import { OpenAIService } from '../openai/openai.service';
+import { cosineSimilarity } from 'src/common/utils/cosineSimilarity';
+import { updateUserInterestVector } from 'src/common/utils/updateUserVector';
+import { VIEW_THREAD_DETAIL_LEARNING_RATE } from 'src/common/constant/learning-rate';
 
 @Injectable()
 export class ThreadService {
   constructor(
     @InjectModel(Thread.name) private readonly threadModel: Model<Thread>,
     private readonly userService: UserService,
-    private readonly cloudinaryService: CloudinaryService, // Thay thế bằng dịch vụ Cloudinary thực tế
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly openAiService: OpenAIService,
   ) {}
 
   async findReportedThreads(minReports: number) {
     return this.threadModel
       .find({
-        $or: [{ reportedNum: { $gte: minReports } }, { status: { $in: ['PENDING', 'HIDE'] } }],
+        $or: [{ reportedNum: { $gte: minReports } }, { status: { $in: ['HIDE'] } }],
       })
       .populate('user', 'username name avatar') // Lấy thông tin user liên quan
       .exec();
@@ -175,6 +180,20 @@ export class ThreadService {
       throw new ForbiddenException('You do not have permission to view this thread');
     }
 
+    // ✅ Cập nhật vector quan tâm của user (nếu có embedding)
+    if (mainThread.embedding?.length) {
+      if (!currentUser.interestVector || currentUser.interestVector.length === 0) {
+        currentUser.interestVector = mainThread.embedding;
+      } else {
+        currentUser.interestVector = updateUserInterestVector(
+          currentUser.interestVector,
+          mainThread.embedding,
+          VIEW_THREAD_DETAIL_LEARNING_RATE,
+        );
+      }
+      await currentUser.save();
+    }
+
     // Lấy thread cha (nếu có)
     let parentThread = null;
     if (mainThread.parentThreadId) {
@@ -234,6 +253,8 @@ export class ThreadService {
         throw new BadRequestException('Error uploading images');
       }
     }
+    const censoredContent = await this.openAiService.censorComment(content);
+    const embedding = await this.openAiService.generateEmbedding(censoredContent);
 
     const thread = new this.threadModel({
       parentThreadId: parrentThreadId ? new Types.ObjectId(parrentThreadId) : null,
@@ -241,6 +262,7 @@ export class ThreadService {
       content,
       visibility: parrentThreadId ? Visibility.PUBLIC : visibility,
       media: formattedUploadedMedia,
+      embedding,
     });
 
     const user = await this.userService.findById(userId);
@@ -313,20 +335,30 @@ export class ThreadService {
       ];
     }
 
-    // Cập nhật thread trong DB
+    if (content.trim() === '') {
+      throw new BadRequestException('Content cannot be empty');
+    }
+
+    let finalContent = thread.content;
+    let embedding = thread.embedding; // Giữ lại embedding cũ
+
+    if (content !== thread.content) {
+      const censoredContent = await this.openAiService.censorComment(content);
+      finalContent = censoredContent;
+      embedding = await this.openAiService.generateEmbedding(censoredContent);
+    }
+
+    const updateData: any = {
+      content: finalContent,
+      visibility,
+      media: updatedMedia,
+    };
+
     const updatedThread = await this.threadModel
-      .findByIdAndUpdate(
-        threadId,
-        {
-          content,
-          visibility,
-          media: updatedMedia,
-        },
-        { new: true },
-      )
+      .findByIdAndUpdate(threadId, updateData, { new: true })
       .populate({
         path: 'user',
-        select: 'username name avatar', // Lấy thông tin user
+        select: 'username name avatar',
       });
 
     if (!updatedThread) {
@@ -388,19 +420,20 @@ export class ThreadService {
     return result;
   }
 
-  async getFeedThreads(userId: string, lastCreatedAt?: Date): Promise<ThreadResponseDto[]> {
-    const limit = 4;
+  async getFeedThreads(
+    userId: string,
+    interestVector: number[],
+    excludedIds: string[] = [],
+  ): Promise<ThreadResponseDto[]> {
+    const limit = 5;
+
     const friends = await this.userService.getFriends(userId);
 
-    // Điều kiện thời gian
-    const dateCondition = lastCreatedAt ? { createdAt: { $lt: lastCreatedAt } } : {};
-
-    // Kết hợp tất cả điều kiện vào một truy vấn duy nhất
     const threads = await this.threadModel
       .find({
-        ...dateCondition,
+        _id: { $nin: excludedIds },
         $or: [
-          { user: userId }, // Bài viết của chính user
+          { user: userId },
           {
             user: { $in: friends },
             visibility: { $in: [Visibility.PUBLIC, Visibility.FOLLOWER_ONLY] },
@@ -410,16 +443,30 @@ export class ThreadService {
             visibility: Visibility.PUBLIC,
           },
         ],
+        embedding: { $exists: true, $ne: [] },
       })
       .populate({
         path: 'user',
         select: 'username name avatar',
       })
-      .sort({ createdAt: -1 })
-      .limit(limit);
+      .limit(limit * 3);
+
+    const scoredThreads = threads.map(thread => ({
+      thread,
+      score: cosineSimilarity(interestVector, thread.embedding || []),
+      isFriend: friends.map(f => f.toString()).includes(thread.user._id.toString()),
+    }));
+
+    scoredThreads.sort((a: any, b: any) => {
+      if (b.score !== a.score) return b.score - a.score; // Ưu tiên độ tương đồng
+      if (b.isFriend !== a.isFriend) return Number(b.isFriend) - Number(a.isFriend); // Ưu tiên bạn bè
+      return b.thread.createdAt.getTime() - a.thread.createdAt.getTime(); // Ưu tiên bài mới hơn
+    });
+
+    const topThreads = scoredThreads.slice(0, limit).map(t => t.thread);
 
     const result = await Promise.all(
-      threads.map(thread => this.mapToThreadResponseDto(thread, userId)),
+      topThreads.map(thread => this.mapToThreadResponseDto(thread, userId)),
     );
 
     return result;
@@ -461,6 +508,35 @@ export class ThreadService {
     // Trả về thread đã được phê duyệt
     const result = await this.mapToThreadResponseDto(thread, thread.user.toString());
     return result;
+  }
+
+  // thread.service.ts
+
+  async updateAllThreadsWithEmbedding(): Promise<number> {
+    const threads = await this.threadModel.find({
+      embedding: { $exists: false },
+    });
+
+    let updatedCount = 0;
+
+    for (const thread of threads) {
+      const content = thread.content?.trim();
+      if (!content) continue;
+
+      try {
+        const embedding = await this.openAiService.generateEmbedding(content);
+        if (embedding && embedding.length > 0) {
+          thread.embedding = embedding;
+          await thread.save();
+          updatedCount++;
+        }
+      } catch (error) {
+        console.error(`Error embedding thread ${thread._id}:`, error.message);
+        continue;
+      }
+    }
+
+    return updatedCount;
   }
 
   public async mapToThreadResponseDto(

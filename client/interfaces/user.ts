@@ -14,6 +14,7 @@ export interface IUser {
   havePassword: boolean;
   role: Role;
   status: string;
+  interestVector: number[];
   followers: {
     name: string;
     username: string;

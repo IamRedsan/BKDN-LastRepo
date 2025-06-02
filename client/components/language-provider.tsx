@@ -216,6 +216,7 @@ const translations = {
     unbanUser: 'Unban User',
     banUserConfirmation: 'Are you sure you want to ban this user?',
     unbanUserConfirmation: 'Are you sure you want to unban this user?',
+    app: 'App',
   },
   vi: {
     user: 'Người dùng',
@@ -421,6 +422,7 @@ const translations = {
     unbanUser: 'Bỏ cấm người dùng',
     banUserConfirmation: 'Bạn có chắc chắn muốn cấm người dùng này không?',
     unbanUserConfirmation: 'Bạn có chắc chắn muốn bỏ cấm người dùng này không?',
+    app: 'Ứng dụng',
   },
   ja: {
     user: 'ユーザー',
@@ -624,6 +626,7 @@ const translations = {
     unbanUser: 'ユーザーの禁止を解除',
     banUserConfirmation: 'このユーザーを禁止してもよろしいですか?',
     unbanUserConfirmation: 'このユーザーの禁止を解除してもよろしいですか?',
+    app: 'アプリ',
   },
 };
 

@@ -127,14 +127,14 @@ export default function PostCard({ post }: PostCardProps) {
       onSuccess: () => {
         setIsDropdownOpen(false);
         toast({
-          title: 'sucess',
-          description: 'reportSuccess',
+          title: t('success'),
+          description: t('reportSuccess'),
         });
       },
       onError: (error) => {
         toast({
-          title: 'error',
-          description: 'reportFailed',
+          title: t('error'),
+          description: t('reportFailed'),
         });
       },
     });
@@ -173,12 +173,6 @@ export default function PostCard({ post }: PostCardProps) {
                 {' '}
                 · {formattedDate}
               </span>
-              {thread.updatedAt !== thread.createdAt && (
-                <span className="text-muted-foreground text-xs">
-                  {' '}
-                  ({t('edit')})
-                </span>
-              )}
             </div>
             <DropdownMenu
               open={isDropdownOpen}

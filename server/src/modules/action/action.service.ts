@@ -1,3 +1,4 @@
+import { updateUserInterestVector } from './../../common/utils/updateUserVector';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
@@ -6,6 +7,12 @@ import { Types } from 'mongoose';
 import { UnfollowFollowersResponseDto } from './dto/response/unfollow-followers-response.dto';
 import { ThreadService } from '../thread/thread.service';
 import { ThreadResponseDto } from '../thread/dto/thread-response.dto';
+import {
+  LIKE_LEARNING_RATE,
+  RETHTREAD_LEARNING_RATE,
+  UNLIKE_LEARNING_RATE,
+  UNRETHTREAD_LEARNING_RATE,
+} from 'src/common/constant/learning-rate';
 
 @Injectable()
 export class ActionService {
@@ -102,24 +109,38 @@ export class ActionService {
       throw new NotFoundException('Thread not found');
     }
 
+    const user = await this.userService.findByIdNotLean(userId);
+    if (!user) throw new NotFoundException('User not found');
+
     const isLiked = thread.reactionBy.some(id => id.toString() === userId);
     if (isLiked) {
       // Unlike logic
       thread.reactionBy = thread.reactionBy.filter(id => id.toString() !== userId);
       thread.reactionNum = Math.max(0, thread.reactionNum - 1);
+      if (thread.embedding.length && user.interestVector.length) {
+        user.interestVector = updateUserInterestVector(
+          user.interestVector,
+          thread.embedding,
+          UNLIKE_LEARNING_RATE,
+        );
+      }
     } else {
       // Like logic
       thread.reactionBy.push(new Types.ObjectId(userId));
       thread.reactionNum += 1;
 
-      // Gửi thông báo like
-      // this.notificationService.createNotification({
-      //   senderUsername: (await this.userService.findById(userId)).username,
-      //   receiverUsername: (await this.userService.findById(thread.user.toString())).username,
-      //   type: 'LIKE',
-      //   content: 'notification_like',
-      //   threadId: threadId,
-      // });
+      if (thread.embedding.length) {
+        if (!user.interestVector || user.interestVector.length === 0) {
+          user.interestVector = thread.embedding; // khởi tạo từ thread
+        } else {
+          user.interestVector = updateUserInterestVector(
+            user.interestVector,
+            thread.embedding,
+            LIKE_LEARNING_RATE,
+          );
+        }
+      }
+
       this.notificationService.generateNotificationLike(
         userId,
         thread.user._id.toString(),
@@ -128,7 +149,7 @@ export class ActionService {
     }
 
     await thread.save();
-
+    await user.save();
     // Trả về response chuẩn
     return this.threadService.mapToThreadResponseDto(thread, userId);
   }
@@ -139,11 +160,25 @@ export class ActionService {
       throw new NotFoundException('Thread not found');
     }
 
+    const user = await this.userService.findByIdNotLean(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const isReThreaded = thread.reThreadBy.some(id => id.toString() === userId);
+
     if (isReThreaded) {
       // Unrethread logic
       thread.reThreadBy = thread.reThreadBy.filter(id => id.toString() !== userId);
       thread.sharedNum = Math.max(0, thread.sharedNum - 1);
+
+      if (thread.embedding.length && user.interestVector.length) {
+        user.interestVector = updateUserInterestVector(
+          user.interestVector,
+          thread.embedding,
+          UNRETHTREAD_LEARNING_RATE,
+        );
+      }
     } else {
       // Rethread logic
       thread.reThreadBy.push(new Types.ObjectId(userId));
@@ -154,11 +189,23 @@ export class ActionService {
         thread.user._id.toString(),
         thread._id.toString(),
       );
+
+      if (thread.embedding.length) {
+        if (!user.interestVector || user.interestVector.length === 0) {
+          user.interestVector = thread.embedding; // khởi tạo từ thread
+        } else {
+          user.interestVector = updateUserInterestVector(
+            user.interestVector,
+            thread.embedding,
+            RETHTREAD_LEARNING_RATE,
+          );
+        }
+      }
     }
 
     await thread.save();
+    await user.save();
 
-    // Trả về response chuẩn
     const response = await this.threadService.mapToThreadResponseDto(thread, userId);
     return response;
   }

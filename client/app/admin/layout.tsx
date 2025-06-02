@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Users, Flag, Home, Settings } from 'lucide-react';
+import { Users, Flag, Home, Command } from 'lucide-react';
 import { LogoutButton } from '@/components/logout-button';
 import { useLanguage } from '@/components/language-provider';
 import { useUserContext } from '@/contexts/userContext';
@@ -67,11 +67,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <span>{t('reportedPosts')}</span>
           </Link>
           <Link
-            href="/admin/settings"
+            href="/user"
             className="flex items-center gap-2 p-2 rounded hover:bg-muted-foreground"
           >
-            <Settings className="h-5 w-5" />
-            <span>{t('settings')}</span>
+            <Command className="h-5 w-5" />
+            <span>{t('app')}</span>
           </Link>
         </nav>
 

@@ -14,12 +14,13 @@ import {
   UploadedFiles,
   UseInterceptors,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { ThreadService } from './thread.service';
 import { RekognitionService } from '../rekognition/rekognition.service';
 import { OpenAIService } from '../openai/openai.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import e, { Request } from 'express';
 import { ThreadDetailResponseDto } from './dto/thread-detail-response.dto';
 import { ThreadCreateUpdateRequestDto } from './dto/request/thread-ce-request.dto';
 import { ThreadResponseDto } from './dto/thread-response.dto';
@@ -30,7 +31,6 @@ export class ThreadController {
   constructor(
     private readonly threadService: ThreadService,
     private readonly rekognitionService: RekognitionService,
-    private readonly openAIService: OpenAIService,
   ) {}
 
   @Get('/detail/:threadId')
@@ -61,28 +61,27 @@ export class ThreadController {
     }
 
     // Check content toxicity
-    const censoredContent = await this.openAIService.censorComment(content);
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    // if (media && media.length > 0) {
-    //   for (const image of media) {
-    //     // Resize and compress the image if it exceeds 5 MB
-    //     let processedBuffer = image.buffer;
-    //     if (image.buffer.length > 5242880) {
-    //       processedBuffer = await sharp(image.buffer)
-    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-    //         .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
-    //         .toBuffer();
-    //     }
+    if (media && media.length > 0) {
+      for (const image of media) {
+        // Resize and compress the image if it exceeds 5 MB
+        let processedBuffer = image.buffer;
+        if (image.buffer.length > 5242880) {
+          processedBuffer = await sharp(image.buffer)
+            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+            .jpeg({ quality: 70 }) // Compress to JPEG with 80% quality
+            .toBuffer();
+        }
 
-    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-    //     if (moderationResult.isToxic) {
-    //       isToxicImage = true;
-    //       break;
-    //     }
-    //   }
-    // }
+        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+        if (moderationResult.isToxic) {
+          isToxicImage = true;
+          break;
+        }
+      }
+    }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');
@@ -90,13 +89,7 @@ export class ThreadController {
 
     // Create thread
     const userId = req.user._id; // Assuming `req.user` contains the authenticated user's info
-    return this.threadService.createThread(
-      userId,
-      censoredContent,
-      visibility,
-      parentThreadId,
-      media,
-    );
+    return this.threadService.createThread(userId, content, visibility, parentThreadId, media);
   }
 
   @Put('/')
@@ -114,39 +107,37 @@ export class ThreadController {
     }
 
     // Check content toxicity
-    const censoredContent = await this.openAIService.censorComment(content);
 
     // Check image toxicity (if media are provided)
     let isToxicImage = false;
-    // if (media && media.length > 0) {
-    //   for (const image of media) {
-    //     // Resize and compress the image if it exceeds 5 MB
-    //     let processedBuffer = image.buffer;
-    //     if (image.buffer.length > 5242880) {
-    //       processedBuffer = await sharp(image.buffer)
-    //         .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
-    //         .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
-    //         .toBuffer();
-    //     }
+    if (media && media.length > 0) {
+      for (const image of media) {
+        // Resize and compress the image if it exceeds 5 MB
+        let processedBuffer = image.buffer;
+        if (image.buffer.length > 5242880) {
+          processedBuffer = await sharp(image.buffer)
+            .resize({ width: 1920 }) // Resize to a maximum width of 1920px while maintaining aspect ratio
+            .jpeg({ quality: 80 }) // Compress to JPEG with 80% quality
+            .toBuffer();
+        }
 
-    //     const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
-    //     if (moderationResult.isToxic) {
-    //       isToxicImage = true;
-    //       break;
-    //     }
-    //   }
-    // }
+        const moderationResult = await this.rekognitionService.moderateImage(processedBuffer);
+        if (moderationResult.isToxic) {
+          isToxicImage = true;
+          break;
+        }
+      }
+    }
 
     if (isToxicImage) {
       throw new BadRequestException('One or more images contain inappropriate content');
     }
-
     // Edit thread
     const userId = req.user._id; // Assuming `req.user` contains the authenticated user's info
     return this.threadService.editThread(
       threadId,
       userId,
-      censoredContent,
+      content,
       visibility,
       media,
       formattedOldMedia,
@@ -174,14 +165,21 @@ export class ThreadController {
     return this.threadService.searchThreads(query, currentUsername);
   }
 
-  @Get('/feed')
+  @Post('/feed')
   @HttpCode(HttpStatus.OK)
   async getFeedThreads(
     @Req() req: Request,
-    @Query('lastCreatedAt') lastCreatedAt?: string,
+    @Body() body: { interestVector?: number[]; excludeThreadIds?: string[] } = {},
   ): Promise<ThreadResponseDto[]> {
     const userId = req.user._id;
-    const lastCreatedAtDate = lastCreatedAt ? new Date(lastCreatedAt) : undefined;
-    return this.threadService.getFeedThreads(userId, lastCreatedAtDate);
+    const { interestVector, excludeThreadIds } = body;
+
+    return this.threadService.getFeedThreads(userId, interestVector, excludeThreadIds);
+  }
+
+  @Patch('embeddings')
+  async updateEmbeddings(): Promise<{ updated: number }> {
+    const updated = await this.threadService.updateAllThreadsWithEmbedding();
+    return { updated };
   }
 }

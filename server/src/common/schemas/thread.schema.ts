@@ -19,14 +19,14 @@ export class Thread extends Document {
 
   @Prop({
     type: String,
-    enum: ['CREATING', 'CREATE_DONE', 'PENDING', 'HIDE'],
-    default: 'CREATING',
+    enum: ['CREATE_DONE', 'HIDE'],
+    default: 'HIDE',
   })
   status: Status;
 
   @Prop({
     type: String,
-    enum: ['PUBLIC', 'PRIVATE', 'FRIEND_ONLY'],
+    enum: ['PUBLIC', 'PRIVATE', 'FOLLOWER_ONLY'],
     default: 'PUBLIC',
   })
   visibility: Visibility;
@@ -48,6 +48,9 @@ export class Thread extends Document {
 
   @Prop({ default: 0 })
   reportedNum: number;
+
+  @Prop({ type: [Number], default: [] }) // float vector
+  embedding: number[];
 }
 
 export const ThreadSchema = SchemaFactory.createForClass(Thread);
