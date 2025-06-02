@@ -81,11 +81,16 @@ export class AuthController {
       }
 
       // Nếu xác thực thành công, đóng cửa sổ và gửi thông tin về parent window
+      const payload = {
+        success: true,
+        role: req.user.role,
+        isBanned: req.user.isBanned,
+      };
       return res.send(`
         <html>
           <body>
             <script>
-              window.opener.postMessage({ success: true }, '*');
+             window.opener.postMessage(${JSON.stringify(payload)}, '*');
               window.close();
             </script>
           </body>

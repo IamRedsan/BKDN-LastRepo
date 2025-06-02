@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   Search,
@@ -12,15 +12,17 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/components/language-provider";
-import CreatePostDialog from "@/components/posts/create-post-dialog";
-import { useEffect, useRef } from "react";
-import { useLogout } from "@/hooks/api/use-auth";
-import { useUserContext } from "@/contexts/userContext";
-import { useNotification } from "@/contexts/notifContext";
-import { cn } from "@/lib/utils";
+  Command,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/language-provider';
+import CreatePostDialog from '@/components/posts/create-post-dialog';
+import { useEffect, useRef } from 'react';
+import { useLogout } from '@/hooks/api/use-auth';
+import { useUserContext } from '@/contexts/userContext';
+import { useNotification } from '@/contexts/notifContext';
+import { cn } from '@/lib/utils';
+import { Role } from '@/enums/Role';
 
 interface SidebarProps {
   open: boolean;
@@ -40,7 +42,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     logout(undefined, {
       onSuccess: () => {
         removeUser();
-        router.push("/auth/login");
+        router.push('/auth/login');
       },
     });
   };
@@ -51,25 +53,35 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
   }, [open]);
 
   const navItems = [
-    { icon: Home, label: t("home"), href: "/user" },
-    { icon: Search, label: t("search"), href: "/user/search" },
+    { icon: Home, label: t('home'), href: '/user' },
+    { icon: Search, label: t('search'), href: '/user/search' },
     {
       icon: PlusSquare,
-      label: t("create"),
-      href: "#",
+      label: t('create'),
+      href: '#',
       isCreate: true,
     },
     {
       icon: Bell,
-      label: t("notifications"),
-      href: "/user/notifications",
+      label: t('notifications'),
+      href: '/user/notifications',
       hasNotification: notReadCount > 0,
     },
     {
       icon: User,
-      label: t("profile"),
-      href: `/user/profile/${user?.username ?? ""}`,
+      label: t('profile'),
+      href: `/user/profile/${user?.username ?? ''}`,
     },
+    // Thêm mục admin nếu là admin
+    ...(user?.role === Role.ADMIN
+      ? [
+          {
+            icon: Command,
+            label: t('admin'),
+            href: '/admin',
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -95,7 +107,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 trigger={
                   <button
                     className={`flex items-center ${
-                      open ? "justify-start px-3" : "justify-center"
+                      open ? 'justify-start px-3' : 'justify-center'
                     } py-2 rounded-md transition-colors hover:bg-accent hover:text-accent-foreground w-full`}
                   >
                     <PlusSquare size={22} />
@@ -110,19 +122,19 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center ${
-                  open ? "justify-start px-3" : "justify-center"
+                  open ? 'justify-start px-3' : 'justify-center'
                 } py-2 rounded-md transition-colors ${
                   pathname === item.href
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? 'bg-accent text-accent-foreground'
+                    : 'hover:bg-accent hover:text-accent-foreground'
                 }`}
               >
                 <item.icon size={20} />
                 {!open && item.hasNotification && (
                   <span
                     className={cn(
-                      "absolute ml-4 mb-4 flex h-3 w-3 items-center justify-center rounded-full bg-red-500",
-                      "ring-2 ring-background animate-pulse"
+                      'absolute ml-4 mb-4 flex h-3 w-3 items-center justify-center rounded-full bg-red-500',
+                      'ring-2 ring-background animate-pulse'
                     )}
                   />
                 )}
@@ -131,7 +143,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
                 )}
                 {item.hasNotification && open && (
                   <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white font-medium">
-                    {notReadCount > 99 ? "99+" : notReadCount}
+                    {notReadCount > 99 ? '99+' : notReadCount}
                   </span>
                 )}
               </Link>
@@ -144,24 +156,24 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         <Link
           href="/user/settings"
           className={`flex items-center ${
-            open ? "justify-start px-3" : "justify-center"
+            open ? 'justify-start px-3' : 'justify-center'
           } py-2 rounded-md transition-colors ${
-            pathname === "/user/settings"
-              ? "bg-accent text-accent-foreground"
-              : "hover:bg-accent hover:text-accent-foreground"
+            pathname === '/user/settings'
+              ? 'bg-accent text-accent-foreground'
+              : 'hover:bg-accent hover:text-accent-foreground'
           }`}
         >
           <Settings size={20} />
-          {open && <span className="ml-3">{t("settings")}</span>}
+          {open && <span className="ml-3">{t('settings')}</span>}
         </Link>
 
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className={`w-full ${!open ? "justify-center" : "justify-start"}`}
+          className={`w-full ${!open ? 'justify-center' : 'justify-start'}`}
         >
           <LogOut size={20} />
-          {open && <span className="ml-3">{t("logout")}</span>}
+          {open && <span className="ml-3">{t('logout')}</span>}
         </Button>
       </div>
     </aside>

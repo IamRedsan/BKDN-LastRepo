@@ -1,43 +1,41 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState } from "react";
-import { useTheme } from "@/components/theme-provider";
-import { useLanguage } from "@/components/language-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from 'react';
+import { useTheme } from '@/components/theme-provider';
+import { useLanguage } from '@/components/language-provider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { mockUsers } from "@/lib/mock-data";
-import { Loader2, User, Lock, Palette, Globe } from "lucide-react";
-import Image from "next/image";
-import { IUser } from "@/interfaces/user";
-import { Theme } from "@/enums/Theme";
-import { Language } from "@/enums/Language";
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, User, Lock, Palette, Globe } from 'lucide-react';
+import Image from 'next/image';
+import { IUser } from '@/interfaces/user';
+import { Theme } from '@/enums/Theme';
+import { Language } from '@/enums/Language';
+import { useUserContext } from '@/contexts/userContext';
 
 export default function AdminSettings() {
   // Assume the first admin user in the mock data
-  const adminUser =
-    mockUsers.find((user) => user.role === "admin") || mockUsers[0];
-  const [user, setUser] = useState<IUser>({ ...adminUser });
+  const { user: ctxUser } = useUserContext();
+  const [user, setUser] = useState<IUser | null>(ctxUser);
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -46,9 +44,9 @@ export default function AdminSettings() {
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -60,17 +58,17 @@ export default function AdminSettings() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Update the user in the state
-      setUser({ ...user });
+      // setUser({ ...user });
 
       toast({
-        title: "Profile Updated",
-        description: "Your profile information has been updated successfully.",
+        title: 'Profile Updated',
+        description: 'Your profile information has been updated successfully.',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update profile. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -84,9 +82,9 @@ export default function AdminSettings() {
     // Validate passwords
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "New password and confirmation do not match.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'New password and confirmation do not match.',
+        variant: 'destructive',
       });
       setIsPasswordLoading(false);
       return;
@@ -98,20 +96,20 @@ export default function AdminSettings() {
 
       // Reset password fields
       setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
       });
 
       toast({
-        title: "Password Updated",
-        description: "Your password has been changed successfully.",
+        title: 'Password Updated',
+        description: 'Your password has been changed successfully.',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to change password. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to change password. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsPasswordLoading(false);
@@ -121,7 +119,7 @@ export default function AdminSettings() {
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme as Theme);
     toast({
-      title: "Theme Updated",
+      title: 'Theme Updated',
       description: `Theme has been changed to ${newTheme}.`,
     });
   };
@@ -129,38 +127,38 @@ export default function AdminSettings() {
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as Language);
     toast({
-      title: "Language Updated",
+      title: 'Language Updated',
       description: `Language has been changed to ${
-        newLanguage === "en"
-          ? "English"
-          : newLanguage === "vi"
-          ? "Vietnamese"
-          : "Japanese"
+        newLanguage === 'en'
+          ? 'English'
+          : newLanguage === 'vi'
+          ? 'Vietnamese'
+          : 'Japanese'
       }.`,
     });
   };
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('settings')}</h1>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid grid-cols-4 mb-8">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Profile
+            {t('profile')}
           </TabsTrigger>
           <TabsTrigger value="password" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
-            Password
+            {t('password')}
           </TabsTrigger>
           <TabsTrigger value="theme" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
-            Theme
+            {t('theme')}
           </TabsTrigger>
           <TabsTrigger value="language" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
-            Language
+            {t('language')}
           </TabsTrigger>
         </TabsList>
 
@@ -168,70 +166,67 @@ export default function AdminSettings() {
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your personal information and profile details.
-              </CardDescription>
+              <CardTitle>{t('profile')}</CardTitle>
             </CardHeader>
             <form onSubmit={handleProfileUpdate}>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-4 mb-6">
                   <Image
-                    src={user.avatar || "/placeholder.svg"}
-                    alt={user.name}
+                    src={user!.avatar || '/placeholder.svg'}
+                    alt={user!.name}
                     width={80}
                     height={80}
                     className="rounded-full"
                   />
                   <div>
-                    <h3 className="font-medium">{user.name}</h3>
+                    <h3 className="font-medium">{user!.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      @{user.username}
+                      @{user!.username}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">{t('name')}</Label>
                     <Input
                       id="name"
-                      value={user.name}
+                      value={user!.name}
                       onChange={(e) =>
-                        setUser({ ...user, name: e.target.value })
+                        setUser({ ...user!, name: e.target.value })
                       }
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username">{t('username')}</Label>
                     <Input
                       id="username"
-                      value={user.username}
+                      value={user!.username}
                       onChange={(e) =>
-                        setUser({ ...user, username: e.target.value })
+                        setUser({ ...user!, username: e.target.value })
                       }
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <Input
                     id="email"
                     type="email"
-                    value={user.email}
+                    value={user!.email}
                     onChange={(e) =>
-                      setUser({ ...user, email: e.target.value })
+                      setUser({ ...user!, email: e.target.value })
                     }
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">{t('bio')}</Label>
                   <Textarea
                     id="bio"
-                    value={user.bio}
-                    onChange={(e) => setUser({ ...user, bio: e.target.value })}
+                    value={user!.bio}
+                    onChange={(e) => setUser({ ...user!, bio: e.target.value })}
                     rows={4}
                   />
                 </div>
@@ -241,7 +236,7 @@ export default function AdminSettings() {
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Save Changes
+                  {t('save')}
                 </Button>
               </CardFooter>
             </form>
@@ -252,15 +247,14 @@ export default function AdminSettings() {
         <TabsContent value="password">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>
-                Update your password to keep your account secure.
-              </CardDescription>
+              <CardTitle>{t('changePassword')}</CardTitle>
             </CardHeader>
             <form onSubmit={handlePasswordChange}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Label htmlFor="currentPassword">
+                    {t('currentPassword')}
+                  </Label>
                   <Input
                     id="currentPassword"
                     type="password"
@@ -275,7 +269,7 @@ export default function AdminSettings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
+                  <Label htmlFor="newPassword">{t('newPassword')}</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -290,7 +284,9 @@ export default function AdminSettings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Label htmlFor="confirmPassword">
+                    {t('confirmPassword')}
+                  </Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -309,7 +305,7 @@ export default function AdminSettings() {
                   {isPasswordLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Change Password
+                  {t('changePassword')}
                 </Button>
               </CardFooter>
             </form>
@@ -320,22 +316,23 @@ export default function AdminSettings() {
         <TabsContent value="theme">
           <Card>
             <CardHeader>
-              <CardTitle>Theme Preferences</CardTitle>
-              <CardDescription>
-                Customize the appearance of the admin dashboard.
-              </CardDescription>
+              <CardTitle>{t('themePreferences')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="theme">Select Theme</Label>
+                <Label htmlFor="theme">{t('selectTheme')}</Label>
                 <Select value={theme} onValueChange={handleThemeChange}>
                   <SelectTrigger id="theme">
-                    <SelectValue placeholder="Select theme" />
+                    <SelectValue placeholder={t('selectThemePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={Theme.Light}>Light</SelectItem>
-                    <SelectItem value={Theme.Dark}>Dark</SelectItem>
-                    <SelectItem value={Theme.System}>System</SelectItem>
+                    <SelectItem value={Theme.Light}>
+                      {t('lightTheme')}
+                    </SelectItem>
+                    <SelectItem value={Theme.Dark}>{t('darkTheme')}</SelectItem>
+                    <SelectItem value={Theme.System}>
+                      {t('systemTheme')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -344,42 +341,42 @@ export default function AdminSettings() {
                 <Card
                   className={`cursor-pointer border-2 ${
                     theme === Theme.Light
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleThemeChange(Theme.Light)}
                 >
                   <CardContent className="p-4 flex flex-col items-center justify-center">
                     <div className="h-24 w-full bg-white border rounded-md mb-2"></div>
-                    <p className="text-sm font-medium">Light</p>
+                    <p className="text-sm font-medium">{t('lightTheme')}</p>
                   </CardContent>
                 </Card>
 
                 <Card
                   className={`cursor-pointer border-2 ${
                     theme === Theme.Dark
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleThemeChange(Theme.Dark)}
                 >
                   <CardContent className="p-4 flex flex-col items-center justify-center">
                     <div className="h-24 w-full bg-slate-900 border rounded-md mb-2"></div>
-                    <p className="text-sm font-medium">Dark</p>
+                    <p className="text-sm font-medium">{t('darkTheme')}</p>
                   </CardContent>
                 </Card>
 
                 <Card
                   className={`cursor-pointer border-2 ${
                     theme === Theme.System
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleThemeChange(Theme.System)}
                 >
                   <CardContent className="p-4 flex flex-col items-center justify-center">
                     <div className="h-24 w-full bg-gradient-to-r from-white to-slate-900 border rounded-md mb-2"></div>
-                    <p className="text-sm font-medium">System</p>
+                    <p className="text-sm font-medium">{t('systemTheme')}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -391,24 +388,25 @@ export default function AdminSettings() {
         <TabsContent value="language">
           <Card>
             <CardHeader>
-              <CardTitle>Language Settings</CardTitle>
-              <CardDescription>
-                Choose your preferred language for the admin interface.
-              </CardDescription>
+              <CardTitle>{t('languageSettings')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="language">Select Language</Label>
+                <Label htmlFor="language">{t('selectLanguage')}</Label>
                 <Select value={language} onValueChange={handleLanguageChange}>
                   <SelectTrigger id="language">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t('selectLanguagePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={Language.English}>English</SelectItem>
-                    <SelectItem value={Language.Vietnamese}>
-                      Tiếng Việt
+                    <SelectItem value={Language.English}>
+                      {t('english')}
                     </SelectItem>
-                    <SelectItem value={Language.Japanese}>日本語</SelectItem>
+                    <SelectItem value={Language.Vietnamese}>
+                      {t('vietnamese')}
+                    </SelectItem>
+                    <SelectItem value={Language.Japanese}>
+                      {t('japanese')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -417,8 +415,8 @@ export default function AdminSettings() {
                 <Card
                   className={`cursor-pointer border-2 ${
                     language === Language.English
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleLanguageChange(Language.English)}
                 >
@@ -426,15 +424,15 @@ export default function AdminSettings() {
                     <div className="h-16 w-full flex items-center justify-center mb-2">
                       <span className="text-2xl">🇺🇸</span>
                     </div>
-                    <p className="text-sm font-medium">English</p>
+                    <p className="text-sm font-medium">{t('english')}</p>
                   </CardContent>
                 </Card>
 
                 <Card
                   className={`cursor-pointer border-2 ${
                     language === Language.Vietnamese
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleLanguageChange(Language.Vietnamese)}
                 >
@@ -442,15 +440,15 @@ export default function AdminSettings() {
                     <div className="h-16 w-full flex items-center justify-center mb-2">
                       <span className="text-2xl">🇻🇳</span>
                     </div>
-                    <p className="text-sm font-medium">Tiếng Việt</p>
+                    <p className="text-sm font-medium">{t('vietnamese')}</p>
                   </CardContent>
                 </Card>
 
                 <Card
                   className={`cursor-pointer border-2 ${
                     language === Language.Japanese
-                      ? "border-primary"
-                      : "border-transparent"
+                      ? 'border-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => handleLanguageChange(Language.Japanese)}
                 >
@@ -458,22 +456,22 @@ export default function AdminSettings() {
                     <div className="h-16 w-full flex items-center justify-center mb-2">
                       <span className="text-2xl">🇯🇵</span>
                     </div>
-                    <p className="text-sm font-medium">日本語</p>
+                    <p className="text-sm font-medium">{t('japanese')}</p>
                   </CardContent>
                 </Card>
               </div>
 
               <div className="mt-6 p-4 bg-muted rounded-md">
-                <h3 className="font-medium mb-2">Preview</h3>
+                <h3 className="font-medium mb-2">{t('preview')}</h3>
                 <div className="space-y-2">
                   <p>
-                    <strong>{t("settings")}:</strong> {t("editProfile")}
+                    <strong>{t('settings')}:</strong> {t('editProfile')}
                   </p>
                   <p>
-                    <strong>{t("language")}:</strong> {t("darkMode")}
+                    <strong>{t('language')}:</strong> {t('darkMode')}
                   </p>
                   <p>
-                    <strong>{t("save")}:</strong> {t("cancel")}
+                    <strong>{t('save')}:</strong> {t('cancel')}
                   </p>
                 </div>
               </div>

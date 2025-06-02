@@ -49,12 +49,6 @@ export class User extends Document {
   @Prop({ default: false })
   havePassword: boolean;
 
-  // @Prop({ default: false })
-  // is2FAEnabled: boolean;
-
-  // @Prop()
-  // twoFactorSecret?: string;
-
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
@@ -69,6 +63,9 @@ export class User extends Document {
 
   @Prop({ default: 0 })
   followingCount: number;
+
+  @Prop({ type: [Number], default: [] })
+  interestVector: number[]; // đại diện cho sở thích người dùng
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

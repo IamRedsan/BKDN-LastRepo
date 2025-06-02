@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { IUser } from '@/interfaces/user';
 import { queryClient } from '@/shared/queryClient';
 import { client } from '@/shared/axiosClient';
@@ -8,12 +8,14 @@ import { useTheme } from '@/components/theme-provider';
 import { useLanguage } from '@/components/language-provider';
 import { Theme } from '@/enums/Theme';
 import { Language } from '@/enums/Language';
+import { Role } from '@/enums/Role';
 
 export type UserContextType = {
   user: IUser | null;
   isLoading: boolean;
   whoami: () => Promise<void>;
   setUser: (user: IUser | null) => void;
+  amiAdmin: () => boolean;
   removeUser: () => void;
 };
 
@@ -48,6 +50,10 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const amiAdmin = () => {
+    return user!.role === Role.ADMIN;
+  };
+
   const removeUser = () => {
     setUser(null);
     queryClient.setQueryData(['user'], null);
@@ -59,6 +65,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     whoami,
     setUser,
     removeUser,
+    amiAdmin,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

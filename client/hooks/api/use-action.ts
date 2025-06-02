@@ -96,3 +96,15 @@ export const useRethread = () => {
     },
   });
 };
+
+export const useReportThread = () => {
+  return useMutation<boolean, AxiosError, string>({
+    mutationFn: async (threadId: string) => {
+      const response = await client.post(`/action/report`, { threadId });
+      return response.data;
+    },
+    onError: (error) => {
+      console.error('Failed to report thread:', error);
+    },
+  });
+};

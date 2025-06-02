@@ -1,7 +1,7 @@
 import {
   NotificationContentEnum,
   NotificationTypeEnum,
-} from '@/enums/notification.enum';
+} from '@/enums/NotificationEnum';
 
 export interface INotification {
   _id: string;

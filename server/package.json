@@ -30,6 +30,7 @@
     "@nestjs/platform-socket.io": "^11.1.0",
     "@nestjs/swagger": "^11.1.0",
     "@nestjs/websockets": "^11.1.0",
+    "@qdrant/js-client-rest": "^1.14.1",
     "@types/nodemailer": "^6.4.17",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
@@ -49,7 +50,8 @@
     "server": "file:",
     "sharp": "^0.34.1",
     "socket.io": "^4.8.1",
-    "streamifier": "^0.1.1"
+    "streamifier": "^0.1.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.5",

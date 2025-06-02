@@ -1,49 +1,73 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Moon, Sun, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { useTheme } from "@/components/theme-provider";
-import { useLanguage } from "@/components/language-provider";
-import { useUpdateUserSetting } from "@/hooks/api/use-user";
-import { Language } from "@/enums/Language";
-import { Theme } from "@/enums/Theme";
-import { useToast } from "@/hooks/use-toast";
-import { useUserContext } from "@/contexts/userContext";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2, Lock, Palette, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useTheme } from '@/components/theme-provider';
+import { useLanguage } from '@/components/language-provider';
+import {
+  useUpdateUserSetting,
+  useUpdateUserPassword,
+} from '@/hooks/api/use-user';
+import { Language } from '@/enums/Language';
+import { Theme } from '@/enums/Theme';
+import { useToast } from '@/hooks/use-toast';
+import { useUserContext } from '@/contexts/userContext';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { user } = useUserContext();
+  const { toast } = useToast();
+
+  // Settings
   const [loading, setLoading] = useState(false);
   const { mutate: updateUserSetting } = useUpdateUserSetting();
-  const { toast } = useToast();
-  const { user } = useUserContext();
 
+  // Password
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const { mutate: updateUserPassword } = useUpdateUserPassword();
+
+  // Save theme/language
   const handleSave = () => {
     setLoading(true);
-
     updateUserSetting(
-      {
-        theme,
-        language,
-      },
+      { theme, language },
       {
         onSuccess: () => {
           toast({
-            title: t("success"),
-            description: t("settingUpdated"),
+            title: t('success'),
+            description: t('settingUpdated'),
           });
           setLoading(false);
         },
         onError: () => {
           toast({
-            title: t("error"),
+            title: t('error'),
           });
           setLoading(false);
         },
@@ -51,77 +75,243 @@ export default function SettingsPage() {
     );
   };
 
+  // Change theme/language (UI only)
+  const handleThemeChange = (newTheme: string) => setTheme(newTheme as Theme);
+  const handleLanguageChange = (newLanguage: string) =>
+    setLanguage(newLanguage as Language);
+
+  // Change password
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      toast({
+        title: t('error'),
+        description: t('emptyFields'),
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: t('error'),
+        description: t('passwordMustMatch'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
+    if (!passwordRegex.test(passwordData.newPassword)) {
+      toast({
+        title: t('error'),
+        description: t('passwordRequirements'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPasswordLoading(true);
+    updateUserPassword(
+      {
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        rePassword: passwordData.confirmPassword,
+      },
+      {
+        onSuccess: (data) => {
+          if (data) {
+            toast({
+              title: t('success'),
+              description: t('passwordChanged'),
+            });
+            setPasswordData({
+              currentPassword: '',
+              newPassword: '',
+              confirmPassword: '',
+            });
+          } else {
+            toast({
+              title: t('error'),
+              description: t('passwordChangeFailed'),
+            });
+          }
+          setIsPasswordLoading(false);
+        },
+        onError: () => {
+          toast({
+            title: t('error'),
+            description: t('passwordChangeFailed'),
+          });
+          setIsPasswordLoading(false);
+        },
+      }
+    );
+  };
+
   return (
-    <div>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{t("settings")}</h1>
-
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">{t("language")}</h2>
-            <RadioGroup
-              value={language}
-              onValueChange={(value) => setLanguage(value as Language)}
-              className="space-y-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value={Language.English} id="en" />
-                <Label htmlFor="en" className="flex items-center space-x-2">
-                  <Globe className="h-4 w-4" />
-                  <span>English</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value={Language.Vietnamese} id="vi" />
-                <Label htmlFor="vi" className="flex items-center space-x-2">
-                  <Globe className="h-4 w-4" />
-                  <span>Tiếng Việt</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value={Language.Japanese} id="ja" />
-                <Label htmlFor="ja" className="flex items-center space-x-2">
-                  <Globe className="h-4 w-4" />
-                  <span>日本語</span>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">{t("darkMode")}</h2>
-            <div className="flex items-center space-x-4">
-              <Sun className="h-5 w-5" />
-              <Switch
-                checked={theme === Theme.Dark}
-                onCheckedChange={(checked) =>
-                  setTheme(checked ? Theme.Dark : Theme.Light)
-                }
-              />
-              <Moon className="h-5 w-5" />
-            </div>
-          </div>
-
-          <Separator />
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-6">{t('settings')}</h1>
+      <Tabs defaultValue="theme" className="w-full">
+        <TabsList
+          className={`grid grid-cols-${user?.havePassword ? '3' : '2'} mb-8`}
+        >
+          <TabsTrigger value="theme" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            {t('theme')}
+          </TabsTrigger>
+          <TabsTrigger value="language" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            {t('language')}
+          </TabsTrigger>
           {user?.havePassword && (
-            <>
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">{t("changePassword")}</h2>
-                <Button onClick={() => router.push("/user/change-password")}>
-                  {t("changePassword")}
-                </Button>
-              </div>
-              <Separator />
-            </>
+            <TabsTrigger value="password" className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              {t('password')}
+            </TabsTrigger>
           )}
+        </TabsList>
 
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? t("saving") : t("save")}
-          </Button>
-        </div>
-      </div>
+        {/* Theme Tab */}
+        <TabsContent value="theme">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('themePreferences')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="theme">{t('selectTheme')}</Label>
+                <Select value={theme} onValueChange={handleThemeChange}>
+                  <SelectTrigger id="theme">
+                    <SelectValue placeholder={t('selectThemePlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={Theme.Light}>
+                      {t('lightTheme')}
+                    </SelectItem>
+                    <SelectItem value={Theme.Dark}>{t('darkTheme')}</SelectItem>
+                    <SelectItem value={Theme.System}>
+                      {t('systemTheme')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('save')}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Language Tab */}
+        <TabsContent value="language">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('languageSettings')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="language">{t('selectLanguage')}</Label>
+                <Select value={language} onValueChange={handleLanguageChange}>
+                  <SelectTrigger id="language">
+                    <SelectValue placeholder={t('selectLanguagePlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={Language.English}>
+                      {t('english')}
+                    </SelectItem>
+                    <SelectItem value={Language.Vietnamese}>
+                      {t('vietnamese')}
+                    </SelectItem>
+                    <SelectItem value={Language.Japanese}>
+                      {t('japanese')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('save')}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Password Tab */}
+        {user?.havePassword && (
+          <TabsContent value="password">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('changePassword')}</CardTitle>
+              </CardHeader>
+              <form onSubmit={handlePasswordChange}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">
+                      {t('currentPassword')}
+                    </Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) =>
+                        setPasswordData((prev) => ({
+                          ...prev,
+                          currentPassword: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">{t('newPassword')}</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) =>
+                        setPasswordData((prev) => ({
+                          ...prev,
+                          newPassword: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">
+                      {t('confirmPassword')}
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordData((prev) => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" disabled={isPasswordLoading}>
+                    {isPasswordLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {t('changePassword')}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }

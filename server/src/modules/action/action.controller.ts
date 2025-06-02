@@ -1,5 +1,5 @@
 import { ActionService } from './action.service';
-import { Controller, HttpCode, HttpStatus, Param, Post, Req } from '@nestjs/common';
+import { Controller, HttpCode, HttpStatus, Param, Post, Req, Body } from '@nestjs/common';
 import { FollowTriggleResponseDto } from './dto/response/follow-triggle-response.dto';
 import { Request } from 'express';
 import { UnfollowFollowersResponseDto } from './dto/response/unfollow-followers-response.dto';
@@ -49,5 +49,12 @@ export class ActionController {
   ): Promise<ThreadResponseDto> {
     const userId = req.user._id.toString();
     return await this.actionService.rethread(userId, threadId);
+  }
+
+  @Post('report')
+  @HttpCode(HttpStatus.OK)
+  async reportThread(@Body('threadId') threadId: string, @Req() req: Request): Promise<boolean> {
+    const reporterId = req.user._id.toString();
+    return this.actionService.reportThread(threadId, reporterId);
   }
 }

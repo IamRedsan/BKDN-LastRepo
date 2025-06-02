@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Search,
   Eye,
@@ -20,8 +20,8 @@ import {
   Lock,
   Globe,
   Users,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -29,30 +29,41 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { mockThreads } from "@/lib/mock-data";
-import { IThread } from "@/interfaces/thread";
-import { Status, Visibility } from "@/enums/ThreadEnum";
-import PostCard from "@/components/posts/post-card";
+} from '@/components/ui/select';
+import { IThread } from '@/interfaces/thread';
+import { Status, Visibility } from '@/enums/ThreadEnum';
+import PostCard from '@/components/posts/post-card';
+import { useLanguage } from '@/components/language-provider';
+import {
+  useAdminApproveThread,
+  useAdminBanThread,
+  useReportedThreads,
+} from '@/hooks/api/use-admin';
+import { useFormatTime } from '@/utils/myFormatDistanceToNow';
 
 export default function ReportsPage() {
-  const [threads, setThreads] = useState(
-    mockThreads.filter((thread) => thread.reportedNum > 0)
-  );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [reportCountFilter, setReportCountFilter] = useState("all");
+  const { data: initialThreads = [], isLoading } = useReportedThreads();
+  const [threads, setThreads] = useState<IThread[]>([]);
+  const { t } = useLanguage();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [reportCountFilter, setReportCountFilter] = useState('all');
   const [selectedThread, setSelectedThread] = useState<IThread | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"ban" | "approve">("ban");
+  const [actionType, setActionType] = useState<'ban' | 'approve'>('ban');
+  const { formatTimeToNow } = useFormatTime();
+  const { mutate: banThread, isPending: isBanLoading } = useAdminBanThread();
+  const { mutate: approveThread, isPending: isApproveLoading } =
+    useAdminApproveThread();
 
   // Filter threads based on search query, status, and report count
   const filteredThreads = threads.filter((thread) => {
@@ -63,21 +74,19 @@ export default function ReportsPage() {
 
     // Status filter
     const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "pending" && thread.status === Status.PENDING) ||
-      (statusFilter === "approved" && thread.status === Status.CREATE_DONE) ||
-      (statusFilter === "banned" && thread.status === Status.HIDE);
+      statusFilter === 'all' ||
+      (statusFilter === 'banned' && thread.status === Status.HIDE);
 
     // Report count filter
     const matchesReportCount =
-      reportCountFilter === "all" ||
-      (reportCountFilter === "low" &&
+      reportCountFilter === 'all' ||
+      (reportCountFilter === 'low' &&
         thread.reportedNum >= 1 &&
         thread.reportedNum <= 3) ||
-      (reportCountFilter === "medium" &&
+      (reportCountFilter === 'medium' &&
         thread.reportedNum >= 4 &&
         thread.reportedNum <= 7) ||
-      (reportCountFilter === "high" && thread.reportedNum >= 8);
+      (reportCountFilter === 'high' && thread.reportedNum >= 8);
 
     return matchesSearch && matchesStatus && matchesReportCount;
   });
@@ -87,38 +96,46 @@ export default function ReportsPage() {
     (a, b) => b.reportedNum - a.reportedNum
   );
 
-  const handleAction = (threadId: string, action: "ban" | "approve") => {
-    setThreads(
-      threads.map((thread) =>
-        thread._id === threadId
-          ? {
-              ...thread,
-              status: action === "ban" ? Status.HIDE : Status.CREATE_DONE,
-            }
-          : thread
-      )
-    );
-    setActionDialogOpen(false);
+  const handleAction = () => {
+    if (!selectedThread) return;
+
+    if (actionType === 'ban') {
+      banThread(selectedThread._id, {
+        onSuccess: (updatedThread) => {
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread._id === updatedThread._id ? updatedThread : thread
+            )
+          );
+          setActionDialogOpen(false);
+        },
+      });
+    } else if (actionType === 'approve') {
+      approveThread(selectedThread._id, {
+        onSuccess: (updatedThread) => {
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread._id === updatedThread._id ? updatedThread : thread
+            )
+          );
+          setActionDialogOpen(false);
+        },
+      });
+    }
   };
 
   const getStatusBadge = (status: Status) => {
     switch (status) {
-      case Status.PENDING:
-        return (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Pending Review
-          </Badge>
-        );
       case Status.CREATE_DONE:
         return (
           <Badge variant="success" className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" /> Approved
+            <CheckCircle className="h-3 w-3" /> {t('create_done')}
           </Badge>
         );
       case Status.HIDE:
         return (
           <Badge variant="destructive" className="flex items-center gap-1">
-            <Ban className="h-3 w-3" /> Banned
+            <Ban className="h-3 w-3" /> {t('hide')}
           </Badge>
         );
       default:
@@ -131,13 +148,13 @@ export default function ReportsPage() {
       case Visibility.PUBLIC:
         return (
           <Badge variant="outline" className="flex items-center gap-1">
-            <Globe className="h-3 w-3" /> Public
+            <Globe className="h-3 w-3" /> {t('public')}
           </Badge>
         );
       case Visibility.PRIVATE:
         return (
           <Badge variant="outline" className="flex items-center gap-1">
-            <Lock className="h-3 w-3" /> Private
+            <Lock className="h-3 w-3" /> {t('only_me')}
           </Badge>
         );
       case Visibility.FOLLOWER_ONLY:
@@ -152,21 +169,27 @@ export default function ReportsPage() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return date;
   };
+
+  useEffect(() => {
+    if (initialThreads && initialThreads !== threads) {
+      setThreads(initialThreads);
+    }
+  }, [initialThreads, threads]);
+
+  if (isLoading) {
+    return <div>{t('loading')}</div>;
+  }
 
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Reported Posts</h1>
+        <h1 className="text-2xl font-bold">{t('reportedPosts')}</h1>
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search posts..."
+            placeholder={t('search')}
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -177,34 +200,36 @@ export default function ReportsPage() {
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="w-full md:w-1/3">
           <label className="text-sm font-medium mb-1 block">
-            Status Filter
+            {t('statusFilter')}
           </label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder={t('filterByStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending Review</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="banned">Banned</SelectItem>
+              <SelectItem value="all">{t('allStatuses')}</SelectItem>
+              <SelectItem value="pending">{t('pendingReview')}</SelectItem>
+              <SelectItem value="approved">{t('approved')}</SelectItem>
+              <SelectItem value="banned">{t('banned')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="w-full md:w-1/3">
-          <label className="text-sm font-medium mb-1 block">Report Count</label>
+          <label className="text-sm font-medium mb-1 block">
+            {t('reportCount')}
+          </label>
           <Select
             value={reportCountFilter}
             onValueChange={setReportCountFilter}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by report count" />
+              <SelectValue placeholder={t('filterByReportCount')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Reports</SelectItem>
-              <SelectItem value="low">Low (1-3)</SelectItem>
-              <SelectItem value="medium">Medium (4-7)</SelectItem>
-              <SelectItem value="high">High (8+)</SelectItem>
+              <SelectItem value="all">{t('allReports')}</SelectItem>
+              <SelectItem value="low">{t('lowReport')}</SelectItem>
+              <SelectItem value="medium">{t('mediumReport')}</SelectItem>
+              <SelectItem value="high">{t('highReport')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -214,13 +239,13 @@ export default function ReportsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Author</TableHead>
-              <TableHead>Content Preview</TableHead>
-              <TableHead>Report Count</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('author')}</TableHead>
+              <TableHead>{t('contentPreview')}</TableHead>
+              <TableHead>{t('reportCount')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>{t('visibility')}</TableHead>
+              <TableHead>{t('date')}</TableHead>
+              <TableHead>{t('action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -236,10 +261,10 @@ export default function ReportsPage() {
                   <Badge
                     variant={
                       thread.reportedNum >= 8
-                        ? "destructive"
+                        ? 'destructive'
                         : thread.reportedNum >= 4
-                        ? "default"
-                        : "outline"
+                        ? 'default'
+                        : 'outline'
                     }
                   >
                     {thread.reportedNum} reports
@@ -247,7 +272,9 @@ export default function ReportsPage() {
                 </TableCell>
                 <TableCell>{getStatusBadge(thread.status)}</TableCell>
                 <TableCell>{getVisibilityBadge(thread.visibility)}</TableCell>
-                <TableCell>{formatDate(thread.createdAt)}</TableCell>
+                <TableCell>
+                  {formatTimeToNow(new Date(thread.createdAt))}
+                </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
                     <Button
@@ -259,36 +286,34 @@ export default function ReportsPage() {
                       }}
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      View
+                      {t('view')}
                     </Button>
-                    {thread.status === Status.PENDING && (
-                      <>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedThread(thread);
-                            setActionType("ban");
-                            setActionDialogOpen(true);
-                          }}
-                        >
-                          <Ban className="h-4 w-4 mr-1" />
-                          Ban
-                        </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedThread(thread);
-                            setActionType("approve");
-                            setActionDialogOpen(true);
-                          }}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                      </>
-                    )}
+                    <>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedThread(thread);
+                          setActionType('ban');
+                          setActionDialogOpen(true);
+                        }}
+                      >
+                        <Ban className="h-4 w-4 mr-1" />
+                        {t('ban')}
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedThread(thread);
+                          setActionType('approve');
+                          setActionDialogOpen(true);
+                        }}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        {t('approve')}
+                      </Button>
+                    </>
                   </div>
                 </TableCell>
               </TableRow>
@@ -301,41 +326,36 @@ export default function ReportsPage() {
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>View Reported Post</DialogTitle>
-            <DialogDescription>
-              This post has been reported {selectedThread?.reportedNum} times
-            </DialogDescription>
+            <DialogTitle>{t('viewReportedPost')}</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             {selectedThread && <PostCard post={selectedThread} />}
           </div>
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
-              Close
+              {t('close')}
             </Button>
-            {selectedThread?.status === Status.PENDING && (
-              <>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setViewDialogOpen(false);
-                    setActionType("ban");
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  Ban Post
-                </Button>
-                <Button
-                  onClick={() => {
-                    setViewDialogOpen(false);
-                    setActionType("approve");
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  Approve Post
-                </Button>
-              </>
-            )}
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setViewDialogOpen(false);
+                  setActionType('ban');
+                  setActionDialogOpen(true);
+                }}
+              >
+                {t('banPost')}
+              </Button>
+              <Button
+                onClick={() => {
+                  setViewDialogOpen(false);
+                  setActionType('approve');
+                  setActionDialogOpen(true);
+                }}
+              >
+                {t('approvePost')}
+              </Button>
+            </>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -345,12 +365,12 @@ export default function ReportsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {actionType === "ban" ? "Ban Post" : "Approve Post"}
+              {actionType === 'ban' ? t('banPost') : t('approvePost')}
             </DialogTitle>
             <DialogDescription>
-              {actionType === "ban"
-                ? "Are you sure you want to ban this post? This will hide it from all users."
-                : "Are you sure you want to approve this post? This will dismiss the reports."}
+              {actionType === 'ban'
+                ? t('banPostConfirmation')
+                : t('approvePostConfirmation')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -358,15 +378,13 @@ export default function ReportsPage() {
               variant="outline"
               onClick={() => setActionDialogOpen(false)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
-              variant={actionType === "ban" ? "destructive" : "default"}
-              onClick={() =>
-                handleAction(selectedThread?._id || "", actionType)
-              }
+              variant={actionType === 'ban' ? 'destructive' : 'default'}
+              onClick={handleAction}
             >
-              {actionType === "ban" ? "Ban Post" : "Approve Post"}
+              {actionType === 'ban' ? t('banPost') : t('approvePost')}
             </Button>
           </DialogFooter>
         </DialogContent>

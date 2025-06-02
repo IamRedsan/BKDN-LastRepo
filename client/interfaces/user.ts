@@ -1,5 +1,6 @@
-import { Language } from "@/enums/Language";
-import { Theme } from "@/enums/Theme";
+import { Language } from '@/enums/Language';
+import { Role } from '@/enums/Role';
+import { Theme } from '@/enums/Theme';
 
 export interface IUser {
   email: string;
@@ -11,8 +12,9 @@ export interface IUser {
   isEmailVerified: boolean;
   requiresUsernameChange: boolean;
   havePassword: boolean;
-  role: string;
+  role: Role;
   status: string;
+  interestVector: number[];
   followers: {
     name: string;
     username: string;

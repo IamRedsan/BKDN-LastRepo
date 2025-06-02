@@ -1,0 +1,5 @@
+export const LIKE_LEARNING_RATE = 1;
+export const UNLIKE_LEARNING_RATE = 0.3;
+export const RETHTREAD_LEARNING_RATE = 1;
+export const UNRETHTREAD_LEARNING_RATE = 0.3;
+export const VIEW_THREAD_DETAIL_LEARNING_RATE = 0.5;
