@@ -20,7 +20,7 @@ export class Thread extends Document {
   @Prop({
     type: String,
     enum: ['CREATE_DONE', 'HIDE'],
-    default: 'HIDE',
+    default: 'CREATE_DONE',
   })
   status: Status;
 

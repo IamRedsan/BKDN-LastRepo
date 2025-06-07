@@ -19,6 +19,8 @@ import { OpenAIService } from '../openai/openai.service';
 import { cosineSimilarity } from 'src/common/utils/cosineSimilarity';
 import { updateUserInterestVector } from 'src/common/utils/updateUserVector';
 import { VIEW_THREAD_DETAIL_LEARNING_RATE } from 'src/common/constant/learning-rate';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationContentEnum, NotificationTypeEnum } from 'src/common/enums/notification.enum';
 
 @Injectable()
 export class ThreadService {
@@ -27,6 +29,7 @@ export class ThreadService {
     private readonly userService: UserService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly openAiService: OpenAIService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findReportedThreads(minReports: number) {
@@ -77,11 +80,11 @@ export class ThreadService {
         .exec();
 
       const reThreads = await this.threadModel
-        .find({ reThreadBy: user._id, parentThreadId: null })
+        .find({ reThreadBy: user._id })
         .sort({ createdAt: -1 }) // Sắp xếp theo updatedAt giảm dần
         .populate({
           path: 'user',
-          select: 'name avatar username', // Chỉ lấy name và avatar
+          select: 'namatar ue avsername', // Chỉ lấy name và avatar
         })
         .exec();
 
@@ -259,7 +262,7 @@ export class ThreadService {
     const thread = new this.threadModel({
       parentThreadId: parrentThreadId ? new Types.ObjectId(parrentThreadId) : null,
       user: new Types.ObjectId(userId),
-      content,
+      censoredContent,
       visibility: parrentThreadId ? Visibility.PUBLIC : visibility,
       media: formattedUploadedMedia,
       embedding,
@@ -268,6 +271,24 @@ export class ThreadService {
     const user = await this.userService.findById(userId);
     const savedThread: any = await thread.save();
     const commentNum = await this.threadModel.countDocuments({ parentThreadId: thread._id });
+
+    if (parrentThreadId) {
+      const parentThread: any = await this.threadModel.findById(parrentThreadId).populate({
+        path: 'user',
+        select: 'username',
+      });
+      if (parentThread && parentThread.user && parentThread.user._id.toString() !== userId) {
+        await this.notificationService.createNotification({
+          senderUsername: user.username,
+          receiverUsername: parentThread.user.username,
+          type: NotificationTypeEnum.COMMENT,
+          threadId: parentThread._id.toString(),
+          threadContent: parentThread.content,
+          content: NotificationContentEnum.COMMENT,
+        });
+      }
+    }
+
     return {
       _id: savedThread._id,
       content: savedThread.content,
