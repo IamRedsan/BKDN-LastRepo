@@ -8,6 +8,7 @@ import { AuthMiddleware } from 'src/common/middlewares/auth.middleware';
 import { OpenAIModule } from '../openai/openai.module';
 import { RekognitionModule } from '../rekognition/rekognition.module';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
     OpenAIModule,
     RekognitionModule,
     CloudinaryModule,
+    NotificationModule,
   ],
   controllers: [ThreadController],
   providers: [ThreadService],
