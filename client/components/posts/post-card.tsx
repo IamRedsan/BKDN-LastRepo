@@ -190,9 +190,9 @@ export default function PostCard({ post }: PostCardProps) {
                     {isTranslated ? 'Show original' : t('translate')}
                   </DropdownMenuItem>
                 )} */}
-                {thread.updatedAt && (
+                {/* {thread.updatedAt && (
                   <DropdownMenuItem>{t('viewEditHistory')}</DropdownMenuItem>
-                )}
+                )} */}
                 <DropdownMenuItem onClick={handleReport}>
                   {t('reportContent')}
                 </DropdownMenuItem>

@@ -1,46 +1,32 @@
-# ================================
-# 🛠️ Build stage
-# ================================
-FROM node:18-alpine AS builder
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Kích hoạt corepack và pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Thư mục làm việc
 WORKDIR /app
 
-# Sao chép các file cần thiết cho cài đặt trước khi copy toàn bộ
-COPY package.json pnpm-lock.yaml ./ 
-COPY tsconfig*.json ./ 
+# Cài pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Cài các dependency (bao gồm dev)
-RUN pnpm install
+# Copy và cài dependencies
+COPY pnpm-lock.yaml package.json ./
+RUN pnpm install --frozen-lockfile
 
-# Sao chép toàn bộ mã nguồn
+# Copy source code và build
 COPY . .
-
-# Build project (Next.js, NestJS, v.v.)
 RUN pnpm build
 
-# ================================
-# 🚀 Production stage
-# ================================
-FROM node:18-alpine
+# Stage 2: Production image
+FROM node:20-alpine
 
-# Kích hoạt corepack + pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Thư mục chạy
 WORKDIR /app
 
-# Sao chép file lock và package để cài production dependencies
-COPY package.json pnpm-lock.yaml ./
+# Cài pnpm cho runtime nếu cần (nếu chỉ dùng node thì có thể bỏ)
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Cài đặt chỉ production dependencies
-RUN pnpm install --prod
+# Copy build output và node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
 
-# Copy toàn bộ từ build stage (bao gồm dist hoặc .next)
-COPY --from=builder /app ./
+EXPOSE 3000
 
-# Lệnh chạy app
-CMD ["pnpm", "start"]
+CMD ["node", "dist/main"]

@@ -85,7 +85,20 @@ export default function ThreadDetailPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
-      setImages([...images, ...newFiles]);
+      const remainingSlots = 4 - images.length;
+      const filesToAdd = newFiles.slice(0, remainingSlots);
+
+      if (filesToAdd.length > 0) {
+        setImages([...images, ...filesToAdd]);
+      }
+
+      if (newFiles.length > remainingSlots) {
+        toast({
+          title: t('warning'),
+          description: t('max_images_limit'),
+          variant: 'destructive',
+        });
+      }
     }
 
     if (fileInputRef.current) {
@@ -266,9 +279,16 @@ export default function ThreadDetailPage() {
                   ref={commentAreaRef}
                   placeholder={`${t('comment')}...`}
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 256) {
+                      setCommentText(e.target.value);
+                    }
+                  }}
                   className="resize-none"
                 />
+                <div className="ml-2 text-xs text-muted-foreground">
+                  {256 - commentText.length}
+                </div>
                 <div className="flex items-center justify-between">
                   <Button
                     type="button"

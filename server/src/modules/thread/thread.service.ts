@@ -71,7 +71,7 @@ export class ThreadService {
     // Nếu là chính người dùng, lấy tất cả threads và reThreads
     if (isCurrentUser) {
       const threads = await this.threadModel
-        .find({ user: user._id, parentThreadId: null })
+        .find({ user: user._id, parentThreadId: null, deletedAt: null })
         .sort({ createdAt: -1 }) // Sắp xếp theo updatedAt giảm dần
         .populate({
           path: 'user',
@@ -80,11 +80,11 @@ export class ThreadService {
         .exec();
 
       const reThreads = await this.threadModel
-        .find({ reThreadBy: user._id })
+        .find({ reThreadBy: user._id, deletedAt: null })
         .sort({ createdAt: -1 }) // Sắp xếp theo updatedAt giảm dần
         .populate({
           path: 'user',
-          select: 'namatar ue avsername', // Chỉ lấy name và avatar
+          select: 'name avatar username', // Chỉ lấy name và avatar
         })
         .exec();
 
@@ -398,20 +398,9 @@ export class ThreadService {
     if (thread.user.toString() !== userId) {
       throw new ForbiddenException('You do not have permission to edit this thread');
     }
-    const currentMediaUrls = thread.media.map(media => media.url);
-    if (currentMediaUrls.length > 0) {
-      await this.cloudinaryService.deleteImages(currentMediaUrls);
-    }
-
-    await this.threadModel.updateMany(
-      { parentThreadId: new Types.ObjectId(threadId) },
-      { $set: { parentThreadId: null } },
-    );
-
-    if (thread.user.toString() !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this thread');
-    }
-    await this.threadModel.findByIdAndDelete(threadId);
+    // Xoá giả: chỉ cập nhật deletedAt
+    thread.deletedAt = new Date();
+    await thread.save();
   }
 
   async searchThreads(query: string, currentUsername: string): Promise<ThreadResponseDto[]> {
@@ -465,6 +454,7 @@ export class ThreadService {
           },
         ],
         embedding: { $exists: true, $ne: [] },
+        deletedAt: null,
       })
       .populate({
         path: 'user',
@@ -532,7 +522,6 @@ export class ThreadService {
   }
 
   // thread.service.ts
-
   async updateAllThreadsWithEmbedding(): Promise<number> {
     const threads = await this.threadModel.find({
       embedding: { $exists: false },

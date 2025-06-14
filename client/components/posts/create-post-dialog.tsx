@@ -1,38 +1,38 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { Camera } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import type React from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { Camera } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { useLanguage } from "@/components/language-provider";
-import ImageList from "./image-list";
-import { Visibility } from "@/enums/ThreadEnum";
+} from '@/components/ui/dialog';
+import { useLanguage } from '@/components/language-provider';
+import ImageList from './image-list';
+import { Visibility } from '@/enums/ThreadEnum';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { IThread } from "@/interfaces/thread";
-import { useCreateThread, useUpdateThread } from "@/hooks/api/use-thread";
-import { useToast } from "@/hooks/use-toast";
-import { useDispatch } from "react-redux";
-import { addThread, updateThread } from "@/store/profile-thread-slice";
-import { useUserContext } from "@/contexts/userContext";
-import { updateSearchThread } from "@/store/search-slice";
-import { updateFeedThread } from "@/store/feed-slice";
-import { AppDispatch } from "@/store";
-import { updateReThread } from "@/store/profile-rethread-slice";
+} from '@/components/ui/select';
+import { IThread } from '@/interfaces/thread';
+import { useCreateThread, useUpdateThread } from '@/hooks/api/use-thread';
+import { useToast } from '@/hooks/use-toast';
+import { useDispatch } from 'react-redux';
+import { addThread, updateThread } from '@/store/profile-thread-slice';
+import { useUserContext } from '@/contexts/userContext';
+import { updateSearchThread } from '@/store/search-slice';
+import { updateFeedThread } from '@/store/feed-slice';
+import { AppDispatch } from '@/store';
+import { updateReThread } from '@/store/profile-rethread-slice';
 
 interface CreatePostDialogProps {
   trigger: React.ReactNode;
@@ -49,7 +49,7 @@ export default function CreatePostDialog({
   setIsDropdownOpen = () => {},
   onUpdateThread = () => {}, // Default to no-op
 }: CreatePostDialogProps) {
-  const [content, setContent] = useState(initialThread?.content || "");
+  const [content, setContent] = useState(initialThread?.content || '');
   const [images, setImages] = useState<(File | { url: string })[]>(
     initialThread?.media || []
   );
@@ -69,11 +69,24 @@ export default function CreatePostDialog({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
-      setImages([...images, ...newFiles]);
+      const remainingSlots = 4 - images.length;
+      const filesToAdd = newFiles.slice(0, remainingSlots);
+
+      if (filesToAdd.length > 0) {
+        setImages([...images, ...filesToAdd]);
+      }
+
+      if (newFiles.length > remainingSlots) {
+        toast({
+          title: t('warning'),
+          description: t('max_images_limit'),
+          variant: 'destructive',
+        });
+      }
     }
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -82,9 +95,9 @@ export default function CreatePostDialog({
 
     if (!content.trim() && images.length === 0) {
       toast({
-        title: t("error"),
-        description: t("post_empty"),
-        variant: "destructive",
+        title: t('error'),
+        description: t('post_empty'),
+        variant: 'destructive',
       });
       return;
     }
@@ -99,7 +112,7 @@ export default function CreatePostDialog({
         (images || []).forEach((item) => {
           if (item instanceof File) {
             media.push(item);
-          } else if (typeof item === "object" && "url" in item) {
+          } else if (typeof item === 'object' && 'url' in item) {
             oldMedia.push(item.url);
           }
         });
@@ -120,11 +133,11 @@ export default function CreatePostDialog({
               dispatch(updateFeedThread(data));
               onUpdateThread(data); // Notify parent component
               toast({
-                title: t("success"),
-                description: t("post_updated"),
-                variant: "default",
+                title: t('success'),
+                description: t('post_updated'),
+                variant: 'default',
               });
-              setContent("");
+              setContent('');
               setImages([]);
               setPrivacy(Visibility.PUBLIC);
               setOpen(false);
@@ -132,9 +145,9 @@ export default function CreatePostDialog({
             },
             onError: (error) => {
               toast({
-                title: t("error"),
-                description: t("post_updated_failed"),
-                variant: "destructive",
+                title: t('error'),
+                description: t('post_updated_failed'),
+                variant: 'destructive',
               });
               setIsDropdownOpen(false);
             },
@@ -152,27 +165,27 @@ export default function CreatePostDialog({
             onSuccess: (data) => {
               dispatch(addThread(data));
               toast({
-                title: t("success"),
-                description: t("post_created"),
-                variant: "default",
+                title: t('success'),
+                description: t('post_created'),
+                variant: 'default',
               });
-              setContent("");
+              setContent('');
               setImages([]);
               setPrivacy(Visibility.PUBLIC);
               setOpen(false);
             },
             onError: (error) => {
               toast({
-                title: t("error"),
-                description: t("post_create_failed"),
-                variant: "destructive",
+                title: t('error'),
+                description: t('post_create_failed'),
+                variant: 'destructive',
               });
             },
           }
         );
       }
     } catch (error) {
-      console.error("Error submitting post:", error);
+      console.error('Error submitting post:', error);
     } finally {
       setLoading(false);
     }
@@ -191,7 +204,7 @@ export default function CreatePostDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? t("edit") : t("create")}</DialogTitle>
+          <DialogTitle>{isEditing ? t('edit') : t('create')}</DialogTitle>
         </DialogHeader>
         {images.length > 0 && (
           <div className="overflow-x-auto mt-2 pb-2 no-scrollbar">
@@ -211,21 +224,21 @@ export default function CreatePostDialog({
           }}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("select_privacy")} />
+            <SelectValue placeholder={t('select_privacy')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={Visibility.PUBLIC}>{t("public")}</SelectItem>
+            <SelectItem value={Visibility.PUBLIC}>{t('public')}</SelectItem>
             <SelectItem value={Visibility.FOLLOWER_ONLY}>
-              {t("followers_only")}
+              {t('followers_only')}
             </SelectItem>
-            <SelectItem value={Visibility.PRIVATE}>{t("only_me")}</SelectItem>
+            <SelectItem value={Visibility.PRIVATE}>{t('only_me')}</SelectItem>
           </SelectContent>
         </Select>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="flex items-start space-x-4">
             <Image
-              src={user?.avatar || "/default-avatar.png"}
+              src={user?.avatar || '/default-avatar.png'}
               alt="User avatar"
               width={40}
               height={40}
@@ -233,13 +246,19 @@ export default function CreatePostDialog({
             />
             <div className="flex-1 space-y-4">
               <Textarea
-                placeholder={`${t("post_something")}`}
+                placeholder={`${t('post_something')}`}
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length <= 256) {
+                    setContent(e.target.value);
+                  }
+                }}
                 rows={4}
                 className="resize-none"
               />
-
+              <div className="ml-2 text-xs text-muted-foreground">
+                {256 - content.length}
+              </div>
               <div className="flex items-center justify-between">
                 <Button
                   type="button"
@@ -271,11 +290,11 @@ export default function CreatePostDialog({
                 >
                   {loading || isPending || isUpdatePending
                     ? isEditing
-                      ? t("updating")
-                      : t("posting")
+                      ? t('updating')
+                      : t('posting')
                     : isEditing
-                    ? t("update")
-                    : t("post")}
+                    ? t('update')
+                    : t('post')}
                 </Button>
               </div>
             </div>

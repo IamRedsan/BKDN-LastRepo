@@ -23,7 +23,7 @@ export default function VerifySuccessPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">App</h1>
+          <h1 className="text-3xl font-bold">Redsan</h1>
           <p className="mt-2 text-muted-foreground">{t('verifySuccess')}</p>
         </div>
 

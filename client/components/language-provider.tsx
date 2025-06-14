@@ -86,6 +86,7 @@ const translations = {
     uploadFailed: 'Upload failed.',
     nameAndUsernameRequired: 'Name and username are required fields.',
     profileUpdated: 'Profile has been updated.',
+    profileUpdateFailed: 'Username already exists or is invalid.',
     saving: 'Saving...',
     settingUpdated: 'Setting has been updated.',
     currentPassword: 'Current Password',
@@ -217,6 +218,7 @@ const translations = {
     banUserConfirmation: 'Are you sure you want to ban this user?',
     unbanUserConfirmation: 'Are you sure you want to unban this user?',
     app: 'App',
+    max_images_limit: 'You can only upload up to 4 images.',
   },
   vi: {
     user: 'Người dùng',
@@ -291,6 +293,7 @@ const translations = {
     uploadFailed: 'Tải lên thất bại.',
     nameAndUsernameRequired: 'Tên và tên người dùng là các trường bắt buộc.',
     profileUpdated: 'Thông tin cá nhân đã được cập nhật. ',
+    profileUpdateFailed: 'Tên tài khoản đã tồn tại hoặc không hợp lệ.',
     saving: 'Đang lưu...',
     settingUpdated: 'Cài đặt đã được cập nhật.',
     currentPassword: 'Mật khẩu hiện tại',
@@ -423,6 +426,7 @@ const translations = {
     banUserConfirmation: 'Bạn có chắc chắn muốn cấm người dùng này không?',
     unbanUserConfirmation: 'Bạn có chắc chắn muốn bỏ cấm người dùng này không?',
     app: 'Ứng dụng',
+    max_images_limit: 'Bạn chỉ có thể tải lên tối đa 4 hình ảnh.',
   },
   ja: {
     user: 'ユーザー',
@@ -495,6 +499,7 @@ const translations = {
     uploadFailed: 'アップロードに失敗しました。',
     nameAndUsernameRequired: '名前とユーザー名は必須フィールドです。',
     profileUpdated: 'プロフィールが更新されました。',
+    profileUpdateFailed: 'ユーザー名が既に存在するか、無効です。',
     saving: '保存中...',
     settingUpdated: '設定が更新されました。',
     currentPassword: '現在のパスワード',
@@ -627,6 +632,7 @@ const translations = {
     banUserConfirmation: 'このユーザーを禁止してもよろしいですか?',
     unbanUserConfirmation: 'このユーザーの禁止を解除してもよろしいですか?',
     app: 'アプリ',
+    max_images_limit: '最大4枚の画像をアップロードできます。',
   },
 };
 

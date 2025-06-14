@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import Image from 'next/image';
+import { formatDistanceToNow } from 'date-fns';
+import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -12,16 +12,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useLanguage } from "@/components/language-provider";
-import { useLoading } from "@/hooks/use-loading";
-import { IThread } from "@/interfaces/thread";
-import { useDeleteThread } from "@/hooks/api/use-thread";
-import { useToast } from "@/hooks/use-toast";
-import { useDispatch } from "react-redux";
-import { deleteThread } from "@/store/profile-thread-slice";
-import { useFormatTime } from "@/utils/myFormatDistanceToNow";
-import { deleteSearchThread } from "@/store/search-slice";
+} from '@/components/ui/dialog';
+import { useLanguage } from '@/components/language-provider';
+import { useLoading } from '@/hooks/use-loading';
+import { IThread } from '@/interfaces/thread';
+import { useDeleteThread } from '@/hooks/api/use-thread';
+import { useToast } from '@/hooks/use-toast';
+import { useDispatch } from 'react-redux';
+import { deleteThread } from '@/store/profile-thread-slice';
+import { useFormatTime } from '@/utils/myFormatDistanceToNow';
+import { deleteSearchThread } from '@/store/search-slice';
 
 interface DeletePostDialogProps {
   thread: IThread;
@@ -55,22 +55,22 @@ DeletePostDialogProps) {
             dispatch(deleteThread(thread._id));
             dispatch(deleteSearchThread(thread._id));
             toast({
-              title: t("success"),
-              description: t("post_deleted"),
+              title: t('success'),
+              description: t('post_deleted'),
             });
             onClose();
           },
           onError: () => {
             toast({
-              title: t("error"),
-              description: t("post_delete_failed"),
+              title: t('error'),
+              description: t('post_delete_failed'),
             });
             onClose();
           },
         });
       },
       {
-        message: `${t("delete")}ing post...`,
+        message: `${t('delete')}ing post...`,
       }
     );
 
@@ -83,16 +83,16 @@ DeletePostDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            {t("deletePost")}
+            {t('deletePost')}
           </DialogTitle>
-          <DialogDescription>{t("confirmDeletePost")}</DialogDescription>
+          <DialogDescription>{t('confirmDeletePost')}</DialogDescription>
         </DialogHeader>
 
         {/* Post preview */}
         <div className="rounded-md border bg-muted/50 p-4">
           <div className="flex items-start space-x-4">
             <Image
-              src={thread.user.avatar || "/placeholder.svg"}
+              src={thread.user.avatar || '/placeholder.svg'}
               alt={thread.user.name}
               width={40}
               height={40}
@@ -108,7 +108,6 @@ DeletePostDialogProps) {
               <p className="text-sm line-clamp-2">{thread.content}</p>
               <div className="text-xs text-muted-foreground">
                 {formattedDate}
-                {thread.updatedAt && <span> · {t("edit")}</span>}
               </div>
             </div>
           </div>
@@ -116,14 +115,14 @@ DeletePostDialogProps) {
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onClose} disabled={isDeleting}>
-            {t("cancel")}
+            {t('cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? `${t("delete")}ing...` : t("delete")}
+            {isDeleting ? `${t('delete')}ing...` : t('delete')}
           </Button>
         </DialogFooter>
       </DialogContent>

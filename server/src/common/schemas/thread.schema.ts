@@ -51,6 +51,9 @@ export class Thread extends Document {
 
   @Prop({ type: [Number], default: [] }) // float vector
   embedding: number[];
+
+  @Prop({ type: Date, default: null })
+  deletedAt?: Date;
 }
 
 export const ThreadSchema = SchemaFactory.createForClass(Thread);

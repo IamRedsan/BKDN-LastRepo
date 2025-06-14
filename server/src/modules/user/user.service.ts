@@ -216,6 +216,15 @@ export class UserService {
     userId: string,
     updateInfoDto: UpdateUserInfoRequestDto,
   ): Promise<WhoamiResponseDto> {
+    // Kiểm tra username đã tồn tại cho user khác chưa
+    const isTaken = await this.userModel.findOne({
+      username: updateInfoDto.username,
+      _id: { $ne: userId },
+    });
+    if (isTaken) {
+      throw new BadRequestException('Username is already taken');
+    }
+
     const updatedUser: User = await this.userModel.findByIdAndUpdate(
       userId,
       {
